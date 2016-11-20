@@ -48,7 +48,7 @@ class NodeWidget(BootstrapTextInput):
 
     def render(self, *args, **kwargs):
         html = super(NodeWidget, self).render(*args, **kwargs)
-        return format_html('<div class="col-sm-8">{}</div>', html)
+        return format_html('<div class="col-sm-7">{}</div>', html)
 
 
 class DomainWidget(forms.Select):
@@ -65,7 +65,7 @@ class DomainWidget(forms.Select):
         else:
             html = super(DomainWidget, self).render(name, value, attrs)
 
-        return format_html('<div class="col-sm-4">{}</div>', html)
+        return format_html('<div class="col-sm-5">{}</div>', html)
 
 
 class FingerprintWidget(BootstrapTextInput):
