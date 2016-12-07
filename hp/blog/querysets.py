@@ -13,18 +13,12 @@
 # You should have received a copy of the GNU General Public License along with django-xmpp-account.
 # If not, see <http://www.gnu.org/licenses/>.
 
-import os
+from django.db import models
 
-from celery import Celery
 
-# set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hp.settings')
+class BlogPostQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published=True)
 
-from django.conf import settings  # noqa
-
-app = Celery('hp')
-
-# Using a string here means the worker will not have to
-# pickle the object when using Windows.
-app.config_from_object('django.conf:settings', namespace='CELERY')
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+    def blog_order(self):
+        return self.order_by('-sticky', '-created')

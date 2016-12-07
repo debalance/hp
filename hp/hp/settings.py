@@ -46,6 +46,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'core',
+    'blog',  # blog posts and pages
     'bootstrap',  # bootstrap enhancements
     'account',  # account management
     'feed',  # RSS/Atom feeds
@@ -198,6 +199,41 @@ COPYRIGHT_NOTICE = _('© 2010-%(year)s, %(brand)s.')
 FACEBOOK_PAGE = ''
 TWITTER_HANDLE = ''
 
+_DEFAULT_SOCIAL_MEDIA_TEXTS = {
+    'account:register': {
+        'meta_desc': _('Register for an account at jabber.at, jabber.zone or xmpp.zone. Its fast, '
+                       'free, easy and safe!'),
+        'title': _('Register at %(BRAND)s'),
+        'twitter_desc': _('Register now for an account at jabber.at, jabber.zone or xmpp.zone. '
+                          'It\'s fast, free, easy and safe!'),
+        'og_desc': _('Jabber is a free and open instant messaging network. Register now for an '
+                     'account at jabber.at, jabber.zone or xmpp.zone. It\'s fast, free, easy and '
+                     'safe!'),
+    },
+    'blog:home': {
+        'meta_desc': _('A free, stable, secure and feature-rich Jabber/XMPP server. '
+                       'Join the free and open Jabber instant messaging network today!'),
+        'twitter_title': _('A free and secure Jabber/XMPP server'),
+        'og_title': _('A free, secure, feature-rich Jabber/XMPP server'),
+    },
+    'core:clients': {
+        'title': _('Recommended Jabber/XMPP clients'),
+        'meta_desc': _('There are many different Jabber/XMPP clients to connect to %(BRAND)s, '
+                       'here are our favourites.'),
+        'og_desc': _('There are many different Jabber/XMPP clients to connect to %(BRAND)s. We '
+                     'have compiled a list of the best clients for your convenience.'),
+    },
+    'core:contact': {
+        'meta_desc': _('Contact us here if you cannot connect or have issues with our service '
+                       'best solved privately.'),
+        'og_desc': _('Contact us here if you cannot connect or have issues with our service '
+                     'best solved privately. We will reply via email as soon as possible. '
+                     'You can also contact us via chatroom, Twitter or Facebook.'),
+        'title': _('Contact %(BRAND)s support'),
+    },
+}
+SOCIAL_MEDIA_TEXTS = {}
+
 ################
 # GPG settings #
 ################
@@ -226,7 +262,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_SEND_TASK_ERROR_EMAILS = True
 
 # Periodic tasks
-CELERYBEAT_SCHEDULE = {
+CELERY_BEAT_SCHEDULE = {
     'core cleanup': {
         'task': 'core.tasks.cleanup',
         'schedule': crontab(hour=3, minute=0),
@@ -236,8 +272,8 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(hour=3, minute=5),
     },
 }
-CELERYD_LOG_FORMAT = None
-CELERYD_TASK_LOG_FORMAT = None
+CELERY_WORKER_LOG_FORMAT = None
+CELERY_WORKER_TASK_LOG_FORMAT = None
 
 ######################
 # Anti-Spam settings #
@@ -301,13 +337,24 @@ elif DEFAULT_XMPP_HOST not in XMPP_HOSTS:
 if not DEFAULT_FROM_EMAIL:
     raise ImproperlyConfigured("The DEFAULT_FROM_EMAIL setting is undefined.")
 
-if CELERYD_LOG_FORMAT is None:
-    CELERYD_LOG_FORMAT = LOG_FORMAT
-if CELERYD_TASK_LOG_FORMAT is None:
+if CELERY_WORKER_LOG_FORMAT is None:
+    CELERY_WORKER_LOG_FORMAT = LOG_FORMAT
+if CELERY_WORKER_TASK_LOG_FORMAT is None:
     # The default includes the task_name
-    CELERYD_TASK_LOG_FORMAT = '[%(asctime).19s %(levelname)-8s] [%(task_name)s] %(message)s'
+    CELERY_WORKER_TASK_LOG_FORMAT = '[%(asctime).19s %(levelname)-8s] [%(task_name)s] %(message)s'
 
 SPAM_BLACKLIST = set([ipaddress.ip_network(addr) for addr in SPAM_BLACKLIST])
+
+# set social media text defaults
+for key, value in _DEFAULT_SOCIAL_MEDIA_TEXTS.items():
+    if key in SOCIAL_MEDIA_TEXTS:
+        SOCIAL_MEDIA_TEXTS[key].update(value)
+    else:
+        SOCIAL_MEDIA_TEXTS[key] = value
+
+    # set empty values by default, otherwise we might get VariableLookup issues
+    SOCIAL_MEDIA_TEXTS[key].setdefault('title', '')
+    SOCIAL_MEDIA_TEXTS[key].setdefault('meta_desc', '')
 
 # Make sure GPG home directories exist
 for backend, config in GPG_BACKENDS.items():

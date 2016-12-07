@@ -23,12 +23,25 @@
     {% endif %}
 
     <div itemprop="publisher" itemscope itemtype="https://schema.org/Organization">
+        <meta itemprop="name" content="{{ post.author.node }}">
         <div itemprop="logo" itemscope itemtype="https://schema.org/ImageObject">
             <meta itemprop="url" content="{% canonical_static "core/img/itemprop.png" %}">
             <meta itemprop="width" content="60">
             <meta itemprop="height" content="60">
         </div>
     </div>
-    <meta itemprop="datePublished" content="{{ post.created|date:"c" }}"/>
-    <meta itemprop="dateModified" content="{{ post.updated|date:"c" }}"/>
+
+    <div class="metadata">
+        <span itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <span itemprop="name">{{ post.author.node }}</span>
+        </span>
+        <div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+            <img src="{% canonical_static "core/img/itemprop.png" %}"/>
+            <meta itemprop="url" content="{% canonical_static "core/img/itemprop.png" %}">
+            <meta itemprop="width" content="60">
+            <meta itemprop="height" content="60">
+        </div>
+        <meta itemprop="datePublished" content="{{ post.created|date:"c" }}"/>
+        <meta itemprop="dateModified" content="{{ post.updated|date:"c" }}"/>
+    </div>
 </div>

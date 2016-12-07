@@ -26,39 +26,19 @@ from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-#from composite_field.l10n import LocalizedCharField
-#from composite_field.l10n import LocalizedTextField
-from jsonfield import JSONField
-from mptt.models import MPTTModel
-from mptt.models import TreeForeignKey
+from core.modelfields import LocalizedCharField
+from core.modelfields import LocalizedTextField
+from core.models import BaseModel
+from core.utils import canonical_link
 
-from .constants import ACTIVITY_FAILED_LOGIN
-from .constants import ACTIVITY_REGISTER
-from .constants import ACTIVITY_RESET_PASSWORD
-from .constants import ACTIVITY_SET_EMAIL
-from .constants import ACTIVITY_SET_PASSWORD
-from .managers import AddressActivityManager
-from .managers import AddressManager
-from .modelfields import LinkTarget
-from .modelfields import LocalizedCharField
-from .modelfields import LocalizedTextField
-from .querysets import AddressActivityQuerySet
-from .querysets import AddressQuerySet
-from .utils import canonical_link
-
-
-class BaseModel(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
+from .querysets import BlogPostQuerySet
 
 
 class BasePage(BaseModel):
     title = LocalizedCharField(max_length=255, help_text=_('Page title'))
     slug = LocalizedCharField(max_length=255, unique=True, help_text=_('Slug (used in URLs)'))
     text = LocalizedTextField()
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True)
     published = models.BooleanField(default=True, help_text=_(
         'Wether or not the page is public.'))
 
@@ -74,6 +54,14 @@ class BasePage(BaseModel):
     html_summary = LocalizedTextField(blank=True, null=True, verbose_name="HTML", help_text=_(
         'Any length, but must be valid HTML. Shown in RSS feeds.'))
 
+    def render_template(self, text, request, extra_context=None):
+        if extra_context is None:
+            extra_context = {}
+        context = template.RequestContext(request, extra_context)
+
+        t = '{%% load blog core bootstrap %%}%s' % text
+        return template.Template(t).render(context)
+
     def render(self, context, summary=False):
         if summary is True:
             return mark_safe(self.get_html_summary(context['request']))
@@ -88,8 +76,9 @@ class BasePage(BaseModel):
 
         return self.render(context)
 
-    def get_text_summary(self):
-        text = html.fromstring(self.text.current).text_content()
+    def get_text_summary(self, request):
+        rendered = self.render_template(self.text.current, request)
+        text = html.fromstring(rendered).text_content()
         return re.sub('[\r\n]+', '\n', text).split('\n', 1)[0].strip(' \n').strip()
 
     def get_sentences(self, summary):
@@ -115,34 +104,34 @@ class BasePage(BaseModel):
             summary = new_summary
         return summary.strip()
 
-    def get_meta_summary(self):
+    def get_meta_summary(self, request):
         if self.meta_summary.current:
-            return self.meta_summary.current
+            return self.render_template(self.meta_summary.current, request)
 
-        full_summary = self.get_text_summary()
+        full_summary = self.get_text_summary(request)
         if len(full_summary) <= 160:
             return full_summary
         return self.crop_summary(full_summary, 160).strip()
 
-    def get_twitter_summary(self):
+    def get_twitter_summary(self, request):
         if self.twitter_summary.current:
-            return self.twitter_summary.current
+            return self.render_template(self.twitter_summary.current, request)
         if self.meta_summary.current:
-            return self.meta_summary.current
+            return self.render_template(self.meta_summary.current, request)
 
-        full_summary = self.get_text_summary()
+        full_summary = self.get_text_summary(request)
         if len(full_summary) <= 200:
             return full_summary
         return self.crop_summary(full_summary, 200).strip()
 
-    def get_opengraph_summary(self):
+    def get_opengraph_summary(self, request):
         if self.opengraph_summary.current:
-            return self.opengraph_summary.current.strip()
-        twitter_summary = self.get_twitter_summary()
+            return self.render_template(self.opengraph_summary.current.strip(), request)
+        twitter_summary = self.get_twitter_summary(request)
         if twitter_summary:
             return twitter_summary
 
-        summary = self.get_text_summary()
+        summary = self.get_text_summary(request)
         return ' '.join(self.get_sentences(summary)[:3]).strip()
 
     def cleanup_html(self, html):
@@ -170,9 +159,6 @@ class BasePage(BaseModel):
 
 
 class Page(BasePage):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True,
-                               related_name='old_author_page')
-
     def get_absolute_url(self):
         return reverse('blog:page', kwargs={'slug': self.slug.current})
 
@@ -181,8 +167,7 @@ class Page(BasePage):
 
 
 class BlogPost(BasePage):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True,
-                               related_name='old_author_post')
+    objects = BlogPostQuerySet.as_manager()
 
     sticky = models.BooleanField(default=False, help_text=_(
         'Pinned at the top of any list of blog posts.'))
@@ -192,64 +177,3 @@ class BlogPost(BasePage):
 
     def __str__(self):
         return self.title.current
-
-
-class MenuItem(MPTTModel, BaseModel):
-    title = LocalizedCharField(max_length=32, help_text=_('Page title'))
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
-    target = LinkTarget()
-
-    def __str__(self):
-        return self.title.current
-
-    class MPTTMeta:
-        order_insertion_by = ['title_en']
-
-
-class CachedMessage(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
-    level = models.IntegerField()
-    message = models.TextField()
-
-
-class Address(models.Model):
-    objects = AddressManager.from_queryset(AddressQuerySet)()
-
-    address = models.GenericIPAddressField()
-    activities = models.ManyToManyField(settings.AUTH_USER_MODEL, through='AddressActivity')
-
-    class Meta:
-        verbose_name = _('IP-Address')
-        verbose_name_plural = _('IP-Addresses')
-
-    def __str__(self):
-        return self.address
-
-
-class AddressActivity(models.Model):
-    objects = AddressActivityManager.from_queryset(AddressActivityQuerySet)()
-
-    address = models.ForeignKey(Address)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-
-    ACTIVITY_CHOICES = {
-        ACTIVITY_FAILED_LOGIN: _('Failed login'),
-        ACTIVITY_REGISTER: _('Registration'),
-        ACTIVITY_RESET_PASSWORD: _('Reset password'),
-        ACTIVITY_SET_EMAIL: _('Set email'),
-        ACTIVITY_SET_PASSWORD: _('Set password'),
-    }
-
-    timestamp = models.DateTimeField(auto_now_add=True)
-    activity = models.SmallIntegerField(
-        choices=sorted([(k, v) for k, v in ACTIVITY_CHOICES.items()], key=lambda t: t[0]))
-    note = models.CharField(max_length=255, default='', blank=True)
-    headers = JSONField(help_text=_('Request headers used.'))
-
-    class Meta:
-        verbose_name = _('IP-Address Activity')
-        verbose_name_plural = _('IP-Address Activities')
-
-    def __str__(self):
-        return '%s: %s/%s' % (self.ACTIVITY_CHOICES[self.activity],
-                              self.address.address, self.user.username)

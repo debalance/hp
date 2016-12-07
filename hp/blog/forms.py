@@ -11,20 +11,22 @@
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with django-xmpp-account.
-# If not, see <http://www.gnu.org/licenses/>.
+# If not, see <http://www.gnu.org/licenses/.
 
-import os
+from django import forms
+from django.utils.translation import gettext_lazy as _
 
-from celery import Celery
+_meta_help = _('For search engines. Max. 160 characters, '
+               '<span class="test-length">160</span> left.')
+_twitter_help = _('At most 200 characters, <span class="test-length">200</span> left.')
 
-# set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hp.settings')
 
-from django.conf import settings  # noqa
-
-app = Celery('hp')
-
-# Using a string here means the worker will not have to
-# pickle the object when using Windows.
-app.config_from_object('django.conf:settings', namespace='CELERY')
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+class BasePageAdminForm(forms.ModelForm):
+    class Meta:
+        # TODO: dynamically adapt to enabled langs?
+        help_texts = {
+            'meta_summary_de': _meta_help,
+            'meta_summary_en': _meta_help,
+            'twitter_summary_de': _twitter_help,
+            'twitter_summary_en': _twitter_help,
+        }
