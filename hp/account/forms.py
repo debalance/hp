@@ -15,6 +15,7 @@
 
 from django import forms
 from django.conf import settings
+from django.contrib.auth import password_validation
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import ugettext_lazy as _
 
@@ -28,9 +29,6 @@ from .formfields import KeyUploadField
 from .formfields import UsernameField
 from .models import User
 from .models import Notifications
-
-_MIN_USERNAME_LENGTH = getattr(settings, 'MIN_USERNAME_LENGTH', 2)
-_MAX_USERNAME_LENGTH = getattr(settings, 'MAX_USERNAME_LENGTH', 64)
 
 
 class GPGMixin(forms.Form):
@@ -157,7 +155,7 @@ class LoginForm(CaptchaFormMixin, AuthenticationForm):
 class NotificationsForm(forms.ModelForm):
     class Meta:
         model = Notifications
-        exclude = ['user']
+        fields = ['account_expires', 'gpg_expires', ]
         labels = {
             'account_expires': _('my account expires'),
             'gpg_expires': _('my GPG key expires'),
@@ -177,15 +175,24 @@ class DeleteAccountForm(forms.Form):
 
 class SetPasswordForm(forms.Form):
     password = BootstrapPasswordField(
-        min_length=6, widget=BootstrapPasswordInput(glyphicon=True), label=_('Password'),
-        help_text=_('Passwords must be at least six characters.'))
+        widget=BootstrapPasswordInput(glyphicon=True), add_min_length=True, label=_('Password'),
+        help_text=password_validation.password_validators_help_text_html())
     password2 = BootstrapPasswordField(
-        min_length=6, widget=BootstrapPasswordInput(glyphicon=True), label=_('Confirm'),
+        widget=BootstrapPasswordInput(glyphicon=True), add_min_length=True, label=_('Confirm'),
         help_text=_('Confirm the password to make sure you spelled it correctly.'))
 
     password_error_messages = {
         'password_mismatch': _("The two password fields didn't match.")
     }
+
+    def __init__(self, *args, **kwargs):
+        self.instance = kwargs.pop('instance', None)
+        super(SetPasswordForm, self).__init__(*args, **kwargs)
+
+    def clean_password2(self):
+        password2 = self.cleaned_data.get("password2")
+        password_validation.validate_password(self.cleaned_data.get('password2'), self.instance)
+        return password2
 
     def clean(self):
         cleaned_data = super(SetPasswordForm, self).clean()

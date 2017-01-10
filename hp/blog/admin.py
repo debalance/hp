@@ -28,6 +28,7 @@ from core.admin import BaseModelAdmin
 from .forms import BasePageAdminForm
 from .models import BlogPost
 from .models import Page
+from .models import Image
 
 User = get_user_model()
 
@@ -37,7 +38,7 @@ class BasePageAdmin(BaseModelAdmin):
     form = BasePageAdminForm
     formfield_overrides = {
         models.TextField: {
-            'widget': TinyMCE(attrs={'cols': 80, 'rows': 20}, mce_attrs={
+            'widget': TinyMCE(attrs={'cols': 60, 'rows': 10}, mce_attrs={
                 'theme': "advanced",
             }),
         },
@@ -188,10 +189,15 @@ class BlogPostAdmin(BasePageAdmin):
                              '...) to generate previews of this content.</p>'
                              '<p><strong>NOTE:</strong> Longer variants fall back to shorter '
                              'variants if not set.</p>'),
-            'classes': ('description', ),
+            'classes': ('collapse', 'meta-descriptions', ),
+        }),
+        (_('Calendar'), {
+            'fields': ('start', 'end', ),
+            'description': _('<p>If set, the page will show up in the iCal calender.</p>'),
+            'classes': ('collapse', ),
         }),
         (_('Meta'), {
-            'fields': (('published', 'sticky'), 'author', ),
+            'fields': (('published', 'sticky'), 'author', 'publication_date', ),
         }),
     )
     list_display = ['__str__', 'created', ]
@@ -222,3 +228,15 @@ class PageAdmin(BasePageAdmin):
     list_filter = ['published', ]
     ordering = ('-title', )
     search_fields = ['title_de', 'title_en', 'text_en', 'text_de']
+
+
+@admin.register(Image)
+class ImageAdmin(BaseModelAdmin):
+    def get_fields(self, request, obj=None):
+        if obj is None:
+            return ['image']
+        return ['image', 'created', 'updated']
+
+    def save_model(self, request, obj, form, change):
+        obj.name = obj.image.name
+        super(ImageAdmin, self).save_model(request, obj, form, change)

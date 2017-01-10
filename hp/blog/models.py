@@ -21,8 +21,11 @@ from lxml import html
 
 from django import template
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -32,6 +35,11 @@ from core.models import BaseModel
 from core.utils import canonical_link
 
 from .querysets import BlogPostQuerySet
+
+if settings.BLOG_MEDIA_ROOT:
+    fs = FileSystemStorage(location=settings.BLOG_MEDIA_ROOT, base_url=settings.BLOG_MEDIA_URL)
+else:
+    fs = default_storage
 
 
 class BasePage(BaseModel):
@@ -135,7 +143,7 @@ class BasePage(BaseModel):
         return ' '.join(self.get_sentences(summary)[:3]).strip()
 
     def cleanup_html(self, html):
-        tags = ['a', 'p', 'strong']
+        tags = ['a', 'p', 'strong', 'ul', 'ol', 'li']
         attrs = {
             'a': ['href', ],
         }
@@ -169,11 +177,26 @@ class Page(BasePage):
 class BlogPost(BasePage):
     objects = BlogPostQuerySet.as_manager()
 
+    publication_date = models.DateTimeField(default=timezone.now, help_text=_(
+        'When the article was published. You can also set this to a future date, if you want to '
+        'publish this post in the future.'))
     sticky = models.BooleanField(default=False, help_text=_(
         'Pinned at the top of any list of blog posts.'))
+    start = models.DateTimeField(null=True, blank=True, help_text=_(
+        'When the event starts.'))
+    end = models.DateTimeField(null=True, blank=True, help_text=_(
+        'When the event stops, defaults to an hour after start.'))
 
     def get_absolute_url(self):
         return reverse('blog:blogpost', kwargs={'slug': self.slug.current})
 
     def __str__(self):
         return self.title.current
+
+
+class Image(BaseModel):
+    name = models.CharField(max_length=32)
+    image = models.ImageField(storage=fs)
+
+    def __str__(self):
+        return self.name

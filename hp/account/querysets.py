@@ -19,6 +19,14 @@ from django.utils import timezone
 
 
 class UserQuerySet(models.QuerySet):
+    def has_email(self):
+        """Users that have an email address."""
+        return self.exclude(email='')
+
+    def confirmed(self):
+        """Users that have a confirmed email address."""
+        return self.exclude(email='').exclude(confirmed__isnull=True)
+
     def count_confirmations(self):
         return self.annotate(count_confirmations=models.Count('confirmations', distinct=True))
 
@@ -36,6 +44,31 @@ class UserQuerySet(models.QuerySet):
 
     def host(self, hostname):
         return self.filter(username__endswith='@%s' % hostname)
+
+    def not_expiring(self, now=None):
+        """Filter users with a recent activity."""
+
+        if settings.ACCOUNT_EXPIRES_DAYS is None:
+            return self
+        if now is None:
+            now = timezone.now()
+
+        return self.filter(last_activity__gt=now - settings.ACCOUNT_EXPIRES_NOTIFICATION_DAYS)
+
+    def expiring(self, now=None):
+        """Match users currently scheduled for automatic account removal.
+
+        This matches users with a ``last_activity`` on or before the current date minus the delta
+        defined by settings.ACCOUNT_EXPIRES_NOTIFICATION_DAYS. If settings.ACCOUNT_EXPIRES_DAYS is
+        ``None``, this function always returns an empty queryset.
+        """
+        if settings.ACCOUNT_EXPIRES_DAYS is None:
+            return self.none()
+
+        if now is None:
+            now = timezone.now()
+
+        return self.filter(last_activity__lte=now - settings.ACCOUNT_EXPIRES_NOTIFICATION_DAYS)
 
 
 class GpgKeyQuerySet(models.QuerySet):

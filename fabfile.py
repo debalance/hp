@@ -17,6 +17,7 @@ import configparser
 from datetime import datetime
 
 from fabric.api import local
+from fabric.api import task
 from fabric.tasks import Task
 
 from fabric_webbuilders import BuildBootstrapTask
@@ -125,6 +126,15 @@ class DeployTask(DeploymentTaskMixin, Task):
         # reload apache
         self.sudo('systemctl reload apache2')
 
+        # copy logrotate config
+        self.sudo('cp %s/files/logrotate/hp-celery /etc/logrotate.d/' % self.path)
+
+        # update systemd files
+        systemd_dir = '%s/files/systemd' % self.path
+        self.sudo('cp %s/hp-celery.tmpfiles /etc/tmpfiles.d/hp-celery.conf' % systemd_dir)
+        self.sudo('cp %s/hp-celery.service /etc/systemd/system/hp-celery.service' % systemd_dir)
+        self.sudo('cp %s/hp-celery.conf /etc/conf.d/' % systemd_dir)
+
         # handle celery
         self.sudo('systemctl daemon-reload')
         self.sudo('systemctl restart hp-celery')
@@ -142,6 +152,15 @@ class UploadDoc(DeploymentTaskMixin, Task):
         local('make -C doc html')
         local('rsync -a --rsync-path="sudo rsync" doc/_build/html/ %s:/var/www/%s/doc/'
               % (config['host'], config['hostname']))
+
+
+@task
+def autodoc():
+    """Automatically rebuild documentation on source changes."""
+    local('make -C doc clean')
+    ignore = '-i *.sw[pmnox] -i *~ -i */4913'
+    local('sphinx-autobuild -p 8080 --watch hp %s doc/ doc/_build/html/' % ignore)
+
 
 setup = SetupTask()
 deploy = DeployTask()
