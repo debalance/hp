@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-08 17:38+0100\n"
+"POT-Creation-Date: 2017-01-11 12:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -290,7 +290,7 @@ msgstr ""
 "GPG-Schlüssel konnte nicht heruntergeladen werden (%(retry)s von %(max)s "
 "Versuchen). Wir werden es in %(time)s noch einmal versuchen."
 
-#: tasks.py:249
+#: tasks.py:252
 msgid "Your account on {{ domain }} is about to expire"
 msgstr "Ihr Konto auf {{ domain }} läuft bald ab"
 
@@ -698,26 +698,36 @@ msgid "No recent log entries found."
 msgstr "Keine Aktivitäten gefunden."
 
 #: templates/account/user_register.html:4
-#: templates/account/user_register.html:55
+#: templates/account/user_register.html:57
 msgid "Register"
 msgstr "Registrieren"
 
 #: templates/account/user_register.html:8
 #, python-format
 msgid ""
-"Please complete the form below to register for an account on %(domain)s.\n"
-"You will receive an email to confirm the address provided. Click on the\n"
-"link in the email to complete your registration."
+"\n"
+"By registering an account on %(domain)s <strong>you agree to our <a href=\"/"
+"p/gtc/\">Terms of Service / GTC</a></strong>.\n"
+"You must have access to <strong>a valid email address of one of the Aachen "
+"universities</strong> to prove that you are eligible for an account.\n"
+"You will receive an email to confirm the address provided, click on the link "
+"in the email to complete your registration.\n"
 msgstr ""
-"Um sich ein Konto auf %(domain)s anzulegen, vervollständigen sie bitte unten "
-"stehendes Formular. Wir werden ihnen eine Bestätigungs-E-Mail schicken, die "
-"einen Link enthält, bei dem sie ihre Registrierung abschließen können."
+"\n"
+"Durch Registrieren eines Accounts auf %(domain)s <strong> stimmen sie unseren"
+" <a href=/p/gtc/\">Nutzungsbedingungen / AGB</a> zu</strong>. "
+"Die Nutzung der auf diesem Server angebotenen Dienste ist <strong>"
+"ausschließlich Angehörigen der Aachener Hochschulen</strong> vorbehalten. "
+"Zur Überprüfung ist <strong>eine gültige E-Mail-Adresse der jeweiligen "
+"Hochschule nötig</strong>. "
+"Wir werden ihnen eine Bestätigungs-E-Mail schicken, die einen Link enthält, "
+"bei dem sie ihre Registrierung abschließen können.\n"
 
-#: templates/account/user_register.html:14
+#: templates/account/user_register.html:16
 msgid "Why do we require your email address?"
 msgstr "Warum verlangen wir ihre E-Mail-Adresse?"
 
-#: templates/account/user_register.html:15
+#: templates/account/user_register.html:17
 msgid ""
 "By default, the email address is used only if you want to reset your\n"
 "password or if your account hasn't been used for a year and is about to be\n"
@@ -727,20 +737,21 @@ msgstr ""
 "wollen oder ihr Konto gelöscht wird, weil es ein Jahr lang nicht genutzt "
 "wurde."
 
-#: templates/account/user_register.html:28
+#: templates/account/user_register.html:30
 #: templates/account/user_set_email.html:16
 msgid "GPG options"
 msgstr "GPG-Optionen"
 
-#: templates/account/user_register.html:36
+#: templates/account/user_register.html:38
 #: templates/account/user_set_email.html:25
+#, python-format
 msgid ""
 "You can add a GPG key to have %(domain)s encrypt all emails sent to you."
 msgstr ""
 "Wenn sie einen GPG-Schlüssel hinzufügen, werden alle E-Mails von %(domain)s "
 "an sie automatisch verschlüsselt."
 
-#: templates/account/user_register.html:38
+#: templates/account/user_register.html:40
 #: templates/account/user_set_email.html:35
 msgid ""
 "<strong>Warning:</strong> Please note the obvious: If you ever loose your\n"
@@ -751,7 +762,7 @@ msgstr ""
 "keinen neuen hier hochladen, können sie E-Mails, die wir ihnen schicken, "
 "nicht mehr lesen."
 
-#: templates/account/user_register.html:47
+#: templates/account/user_register.html:49
 #: templates/account/user_set_email.html:44
 msgid "- and/or -"
 msgstr "- und/oder -"
@@ -959,10 +970,3 @@ msgid ""
 msgstr ""
 "Der Fingerabdruck im hex-format: Ziffern, Buchstaben A-F (Groß-/"
 "Kleinschreibung ist egal)."
-
-#~ msgid ""
-#~ "Could not reach keyserver. Will try again in %(time)s (%(retry)s of "
-#~ "%(max_retries)s tries)"
-#~ msgstr ""
-#~ "Der Keyserver ist derzeit nicht erreichbar. Wir versuchen es in %(time)s "
-#~ "erneut (%(retry)s von %(max_retries)s Versuchen)."

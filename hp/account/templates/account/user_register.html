@@ -5,9 +5,11 @@
 
 {% block form %}
 <p>
-{% blocktrans with domain=site.NAME %}Please complete the form below to register for an account on {{ domain }}.
-You will receive an email to confirm the address provided. Click on the
-link in the email to complete your registration.{% endblocktrans %}
+{% blocktrans with domain=site.NAME %}
+By registering an account on {{ domain }} <strong>you agree to our <a href="/p/gtc/">Terms of Service / GTC</a></strong>.
+You must have access to <strong>a valid email address of one of the Aachen universities</strong> to prove that you are eligible for an account.
+You will receive an email to confirm the address provided, click on the link in the email to complete your registration.
+{% endblocktrans %}
 </p>
 <div class="alert alert-info alert-dismissable with-header" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
