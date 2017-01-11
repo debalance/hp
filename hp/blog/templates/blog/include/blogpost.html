@@ -1,0 +1,55 @@
+{% load i18n admin_urls render canonical %}
+<div itemscope itemtype="http://schema.org/NewsArticle" class="blog-post">
+    {% if summary %}
+    <h3><a href="{{ post.get_absolute_url }}">
+    {% else %}
+        <meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" itemid="https://google.com/article"/> 
+        <div class="page-header"><h1>
+    {% endif %}
+
+    <span itemprop="headline">{{ post.title.current }}</span>
+    {% if summary %}</a>{% endif %}
+    <small>{% blocktrans with date=post.publication_date user=post.author.node %}{{ date }} by {{ user}}{% endblocktrans %}
+    </small>
+    {% if summary %}
+        {% if perms.change_blogpost %}
+        <a class="btn btn-default btn-xs" href="{% url 'admin:blog_blogpost_change' post.pk%}" role="button">{% trans "Change" %}</a>
+        {% endif %}
+        </h3>
+    {% else %}
+        </h1></div>
+        {% if perms.change_blogpost %}
+        <p><a class="btn btn-default" href="{% url 'admin:blog_blogpost_change' post.pk%}" role="button">{% trans "Change" %}</a></p>
+        {% endif %}
+    {% endif %}
+
+
+    {% render post summary=summary %}
+    {% if summary %}
+        <a href="{{ post.get_absolute_url }}">{% trans "... read more" %}</a>
+        <hr>
+    {% endif %}
+
+    <div itemprop="publisher" itemscope itemtype="https://schema.org/Organization">
+        <meta itemprop="name" content="{{ post.author.node }}">
+        <div itemprop="logo" itemscope itemtype="https://schema.org/ImageObject">
+            <meta itemprop="url" content="{% canonical_static "core/img/itemprop.png" %}">
+            <meta itemprop="width" content="60">
+            <meta itemprop="height" content="60">
+        </div>
+    </div>
+
+    <div class="metadata">
+        <span itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <span itemprop="name">{{ post.author.node }}</span>
+        </span>
+        <div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+            <img src="{% canonical_static "core/img/itemprop.png" %}"/>
+            <meta itemprop="url" content="{% canonical_static "core/img/itemprop.png" %}">
+            <meta itemprop="width" content="60">
+            <meta itemprop="height" content="60">
+        </div>
+        <meta itemprop="datePublished" content="{{ post.publication_date|date:"c" }}"/>
+        <meta itemprop="dateModified" content="{{ post.updated|date:"c" }}"/>
+    </div>
+</div>

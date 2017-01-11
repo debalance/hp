@@ -13,13 +13,16 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+
+from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
+
 from core.urlpatterns import i18n_url
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    url(r'^%s/' % settings.ADMIN_URL.strip('/'), admin.site.urls),
     url(r'^tinymce/', include('tinymce.urls')),
     url(r'^captcha/', include('captcha.urls')),
 
@@ -28,4 +31,5 @@ urlpatterns = [
     url(r'^conversejs/', include('conversejs.urls')),
     url(r'^xep0363/', include('xmpp_http_upload.urls', namespace='xmpp-http-upload')),
     i18n_url(r'^', include('core.urls')),
+    url(r'^', include('blog.urls')),
 ]

@@ -15,6 +15,8 @@
 
 import logging
 import os
+import re
+import textwrap
 
 from urllib.parse import urljoin
 
@@ -25,6 +27,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils.translation import ungettext
 from django.utils.translation import ugettext as _
+from django.utils.text import normalize_newlines
 
 from .exceptions import TemporaryError
 
@@ -181,3 +184,15 @@ def absolutify_html(html, base_url):
     tree_walker = html5lib.treewalkers.getTreeWalker('dom')
     html_serializer = html5lib.serializer.htmlserializer.HTMLSerializer()
     return ''.join(html_serializer.serialize(tree_walker(body)))
+
+
+def mailformat(text, width=78):
+    text = normalize_newlines(text.strip())
+    text = re.sub('\n\n+', '\n\n', text)
+
+    ps = []
+    for p in text.split('\n\n'):
+        ps.append(textwrap.fill(p, width=width))
+        ps.append('')
+
+    return '\n'.join(ps).strip()

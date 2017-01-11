@@ -44,7 +44,6 @@ from .modelfields import LocalizedCharField
 from .modelfields import LocalizedTextField
 from .querysets import AddressActivityQuerySet
 from .querysets import AddressQuerySet
-from .querysets import BlogPostQuerySet
 from .utils import canonical_link
 
 
@@ -60,7 +59,6 @@ class BasePage(BaseModel):
     title = LocalizedCharField(max_length=255, help_text=_('Page title'))
     slug = LocalizedCharField(max_length=255, unique=True, help_text=_('Slug (used in URLs)'))
     text = LocalizedTextField()
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True)
     published = models.BooleanField(default=True, help_text=_(
         'Wether or not the page is public.'))
 
@@ -172,21 +170,25 @@ class BasePage(BaseModel):
 
 
 class Page(BasePage):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True,
+                               related_name='old_author_page')
+
     def get_absolute_url(self):
-        return reverse('core:page', kwargs={'slug': self.slug.current})
+        return reverse('blog:page', kwargs={'slug': self.slug.current})
 
     def __str__(self):
         return self.title.current
 
 
 class BlogPost(BasePage):
-    objects = BlogPostQuerySet.as_manager()
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True,
+                               related_name='old_author_post')
 
     sticky = models.BooleanField(default=False, help_text=_(
         'Pinned at the top of any list of blog posts.'))
 
     def get_absolute_url(self):
-        return reverse('core:blogpost', kwargs={'slug': self.slug.current})
+        return reverse('blog:blogpost', kwargs={'slug': self.slug.current})
 
     def __str__(self):
         return self.title.current
@@ -208,6 +210,7 @@ class CachedMessage(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
     level = models.IntegerField()
     message = models.TextField()
+    payload = JSONField(default=dict)
 
 
 class Address(models.Model):

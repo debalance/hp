@@ -44,8 +44,10 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS = None
+_DEFAULT_INSTALLED_APPS = [
     'core',
+    'blog',  # blog posts and pages
     'bootstrap',  # bootstrap enhancements
     'account',  # account management
     'feed',  # RSS/Atom feeds
@@ -63,7 +65,6 @@ INSTALLED_APPS = [
     'mptt',  # Tree structure for MenuItem
     'tinymce',  # Rich text editor
     'xmpp_http_upload',  # XEP-0363
-
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -166,7 +167,7 @@ LOGIN_REDIRECT_URL = reverse_lazy('account:detail')
 
 # Authenticate against the XMPP server
 AUTHENTICATION_BACKENDS = [
-    'django_xmpp_backends.auth_backends.XmppBackendBackend',
+    'xmpp_backends.django.auth_backends.XmppBackendBackend',
 ]
 
 ###################
@@ -180,6 +181,14 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger error',
     messages.DEBUG: 'info debug',
 }
+ACCOUNT_EXPIRES_DAYS = None
+ACCOUNT_EXPIRES_NOTIFICATION_DAYS = None
+
+ADMIN_URL = '/admin/'
+
+# Custom media root directory for Images uploaded via admin
+BLOG_MEDIA_ROOT = None
+BLOG_MEDIA_URL = None
 
 XMPP_HOSTS = {}
 CONTACT_ADDRESS = None
@@ -198,6 +207,74 @@ COPYRIGHT_NOTICE = _('© 2010-%(year)s, %(brand)s.')
 FACEBOOK_PAGE = ''
 TWITTER_HANDLE = ''
 
+_DEFAULT_SOCIAL_MEDIA_TEXTS = {
+    'account:register': {
+        'meta_desc': _('Register for an account at jabber.at, jabber.zone or xmpp.zone. Its fast, '
+                       'free, easy and safe!'),
+        'title': _('Register at %(BRAND)s'),
+        'twitter_desc': _('Register now for an account at jabber.at, jabber.zone or xmpp.zone. '
+                          'It\'s fast, free, easy and safe!'),
+        'og_desc': _('Jabber is a free and open instant messaging network. Register now for an '
+                     'account at jabber.at, jabber.zone or xmpp.zone. It\'s fast, free, easy and '
+                     'safe!'),
+    },
+    'blog:home': {
+        'meta_desc': _('A free, stable, secure and feature-rich Jabber/XMPP server. '
+                       'Join the free and open Jabber instant messaging network today!'),
+        'twitter_title': _('A free and secure Jabber/XMPP server'),
+        'og_title': _('A free, secure, feature-rich Jabber/XMPP server'),
+    },
+    'core:clients': {
+        'title': _('Recommended Jabber/XMPP clients'),
+        'meta_desc': _('There are many different Jabber/XMPP clients to connect to %(BRAND)s, '
+                       'here are our favourites.'),
+        'og_desc': _('There are many different Jabber/XMPP clients to connect to %(BRAND)s. We '
+                     'have compiled a list of the best clients for your convenience.'),
+    },
+    'core:contact': {
+        'meta_desc': _('Contact us here if you cannot connect or have issues with our service '
+                       'best solved privately.'),
+        'og_desc': _('Contact us here if you cannot connect or have issues with our service '
+                     'best solved privately. We will reply via email as soon as possible. '
+                     'You can also contact us via chatroom, Twitter or Facebook.'),
+        'title': _('Contact %(BRAND)s support'),
+    },
+}
+SOCIAL_MEDIA_TEXTS = {}
+
+ACCOUNT_USER_MENU = None
+_DEFAULT_ACCOUNT_USER_MENU = [
+    ('account:detail', {
+        'title': _('Overview'),
+        'requires_confirmation': False,
+    }),
+    ('account:sessions', {
+        'title': _('Current sessions'),
+    }),
+    ('account:notifications', {
+        'title': _('Notifications'),
+    }),
+    ('account:set_password', {
+        'title': _('Set password'),
+    }),
+    ('account:set_email', {
+        'title': _('Set E-Mail'),
+    }),
+    ('account:xep0363', {
+        'title': _('HTTP uploads'),
+    }),
+    ('account:gpg', {
+        'title': _('GPG keys'),
+    }),
+    ('account:log', {
+        'title': _('Recent activity'),
+        'requires_confirmation': False,
+    }),
+    ('account:delete', {
+        'title': _('Delete account'),
+    }),
+]
+
 ################
 # GPG settings #
 ################
@@ -206,7 +283,7 @@ GPG_KEYSERVER = 'http://pool.sks-keyservers.net:11371'
 # Default GPG backend configuration
 GPG_BACKENDS = {
     'default': {
-        'BACKEND': 'gpgmime.gpgme.GpgMeBackend',
+        'BACKEND': 'gpgliblib.gpgme.GpgMeBackend',
         'HOME': os.path.join(ROOT_DIR, 'gnupg'),
         # Optional settings:
         #'PATH': '/home/...',  # Path to 'gpg' binary
@@ -226,7 +303,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_SEND_TASK_ERROR_EMAILS = True
 
 # Periodic tasks
-CELERYBEAT_SCHEDULE = {
+CELERY_BEAT_SCHEDULE = {
     'core cleanup': {
         'task': 'core.tasks.cleanup',
         'schedule': crontab(hour=3, minute=0),
@@ -235,9 +312,13 @@ CELERYBEAT_SCHEDULE = {
         'task': 'account.tasks.cleanup',
         'schedule': crontab(hour=3, minute=5),
     },
+    'account last activity': {
+        'task': 'account.tasks.update_last_activity',
+        'schedule': crontab(minute=12),
+    },
 }
-CELERYD_LOG_FORMAT = None
-CELERYD_TASK_LOG_FORMAT = None
+CELERY_WORKER_LOG_FORMAT = None
+CELERY_WORKER_TASK_LOG_FORMAT = None
 
 ######################
 # Anti-Spam settings #
@@ -277,6 +358,9 @@ SPAM_BLACKLIST = set()
 BANNED_EMAIL_DOMAINS = set()
 EMAIL_BLACKLIST = tuple()
 EMAIL_WHITELIST = tuple()
+
+MIN_USERNAME_LENGTH = 2
+MAX_USERNAME_LENGTH = 64
 REQUIRE_UNIQUE_EMAIL = False
 
 ####################
@@ -301,13 +385,43 @@ elif DEFAULT_XMPP_HOST not in XMPP_HOSTS:
 if not DEFAULT_FROM_EMAIL:
     raise ImproperlyConfigured("The DEFAULT_FROM_EMAIL setting is undefined.")
 
-if CELERYD_LOG_FORMAT is None:
-    CELERYD_LOG_FORMAT = LOG_FORMAT
-if CELERYD_TASK_LOG_FORMAT is None:
+if CELERY_WORKER_LOG_FORMAT is None:
+    CELERY_WORKER_LOG_FORMAT = LOG_FORMAT
+if CELERY_WORKER_TASK_LOG_FORMAT is None:
     # The default includes the task_name
-    CELERYD_TASK_LOG_FORMAT = '[%(asctime).19s %(levelname)-8s] [%(task_name)s] %(message)s'
+    CELERY_WORKER_TASK_LOG_FORMAT = '[%(asctime).19s %(levelname)-8s] [%(task_name)s] %(message)s'
+
+# Process any local INSTALLED_APPS config
+if INSTALLED_APPS is None:
+    INSTALLED_APPS = _DEFAULT_INSTALLED_APPS
+elif callable(INSTALLED_APPS):
+    INSTALLED_APPS = INSTALLED_APPS(_DEFAULT_INSTALLED_APPS)
+
+# If ACCOUNT_USER_MENU is None, set the default value, if it's a callable, pass default to it
+if ACCOUNT_USER_MENU is None:
+    ACCOUNT_USER_MENU = _DEFAULT_ACCOUNT_USER_MENU
+elif callable(ACCOUNT_USER_MENU):
+    ACCOUNT_USER_MENU = ACCOUNT_USER_MENU(_DEFAULT_ACCOUNT_USER_MENU)
+
+if ACCOUNT_EXPIRES_DAYS is not None:
+    if ACCOUNT_EXPIRES_NOTIFICATION_DAYS is None:
+        ACCOUNT_EXPIRES_NOTIFICATION_DAYS = ACCOUNT_EXPIRES_DAYS - 7
+
+    ACCOUNT_EXPIRES_DAYS = timedelta(days=ACCOUNT_EXPIRES_DAYS)
+    ACCOUNT_EXPIRES_NOTIFICATION_DAYS = timedelta(days=ACCOUNT_EXPIRES_NOTIFICATION_DAYS)
 
 SPAM_BLACKLIST = set([ipaddress.ip_network(addr) for addr in SPAM_BLACKLIST])
+
+# set social media text defaults
+for key, value in _DEFAULT_SOCIAL_MEDIA_TEXTS.items():
+    if key in SOCIAL_MEDIA_TEXTS:
+        SOCIAL_MEDIA_TEXTS[key].update(value)
+    else:
+        SOCIAL_MEDIA_TEXTS[key] = value
+
+    # set empty values by default, otherwise we might get VariableLookup issues
+    SOCIAL_MEDIA_TEXTS[key].setdefault('title', '')
+    SOCIAL_MEDIA_TEXTS[key].setdefault('meta_desc', '')
 
 # Make sure GPG home directories exist
 for backend, config in GPG_BACKENDS.items():
@@ -363,10 +477,12 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'requests': {'level': LIBRARY_LOG_LEVEL, },
+
         'account': {'level': LOG_LEVEL, },
         'bootstrap': {'level': LOG_LEVEL, },
         'core': {'level': LOG_LEVEL, },
-        'gpgmime': {'level': LOG_LEVEL, },
+        'gpgliblib': {'level': LOG_LEVEL, },
     },
     'root': {
         'handlers': ['console', ],

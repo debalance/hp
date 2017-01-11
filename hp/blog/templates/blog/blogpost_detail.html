@@ -1,0 +1,12 @@
+{% extends "page.html" %}
+{% load i18n staticfiles render %}
+
+{% block head %}{{ block.super }}
+<link href="{% static 'css/blog.css' %}" rel="stylesheet">
+{% endblock head %}
+
+{% block title %}{{ post.title.current }}{% endblock title %}
+
+{% block page-inner %}
+{% include "blog/include/blogpost.html" %}
+{% endblock page-inner%}

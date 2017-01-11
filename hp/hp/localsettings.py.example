@@ -52,15 +52,21 @@ DATABASES = {
 #)
 
 # Static and media files configuration
-#MEDIA_ROOT = '/var/www/account.jabber.at/media'
+#MEDIA_ROOT = '/var/www/example.com/media/'
 #MEDIA_URL = '/media/'
-#STATIC_ROOT = '/var/www/jabber.at/static/'
+#STATIC_ROOT = '/var/www/example.com/static/'
 
 # Set this to True during development
 #DEBUG = True
 
 # Set this to something long and unique
 SECRET_KEY = ''
+
+# If you want to configure INSTALLED_APPS to add your own Django apps, you can either completely
+# override the INSTALLED_APPS setting or set it to a callable that will receive the default value
+# must return your modified value. For more information, see:
+#     https://jabber.at/doc/settings.html#setting-installed-apps
+#INSTALLED_APPS = [...]
 
 #########################
 # General configuration #
@@ -70,12 +76,46 @@ SECRET_KEY = ''
 # "%(brand)s" is replaced with the "BRAND" key of the current site.
 #COPYRIGHT_NOTICE = _('© 2010-%(year)s, %(brand)s.')
 
+# Location of the admin interface
+#ADMIN_URL = 'admin/'
+
+# You can define a different root directory for uploaded images via the admin interface. This is
+# useful if your MEDIA_URL is on a separate domain (e.g. because XEP-0363 uploads should be served
+# from somewhere else) and still want your own uploaded files saved to a different directory.
+#BLOG_MEDIA_ROOT = '/var/www/other.example.com/media/'
+#BLOG_MEDIA_URL = '/media/'
+
+#########################
+# Account configuration #
+#########################
+
 # Minimum and maximum username length allowed by the interface.
 #MIN_USERNAME_LENGTH = 2
 #MAX_USERNAME_LENGTH = 64
 
 # Require a unique email address. By default an address can be used by multiple accounts.
 #REQUIRE_UNIQUE_EMAIL = True
+
+# If your XMPP server automatically removes unused accounts (e.g. via
+# "ejabberdctl delete_old_users", the project supports sending emails to users that their account
+# is about to be removed.
+#
+# NOTE: The project NEVER automatically removes accounts from the XMPP server. The settings here
+#       only configure the warning messages to users.
+#
+# Accounts are automatically removed after this many days. If None (the default), accounts are not
+# automatically removed.
+#ACCOUNT_EXPIRES_DAYS = 365
+
+# Notify users after this many days of inactivity about pending account removal. The default is
+# seven days before ACCOUNT_EXPIRES_DAYS.
+#ACCOUNT_EXPIRES_NOTIFICATION_DAYS = 358
+
+# You can configure the user menu (visible on all /account pages to disable or even add
+# functionality. This can be a list of tuples replacing the initial value, or a callable
+# that manipulates the default value. For more information, please see:
+#   https://jabber.at/doc/settings.html
+#ACCOUNT_USER_MENU = [... ]
 
 ##########
 # Caches #
@@ -127,7 +167,8 @@ CACHES = {
 # XMPP hosts configuration #
 ############################
 
-# Connection to the XMPP server.
+# Connection to the XMPP server. For more information, see:
+#    http://xmpp-backends.readthedocs.io/en/latest/
 XMPP_BACKENDS = {
     'default': {
         # For development, uses Djangos cache (see CACHES)
@@ -210,20 +251,29 @@ DEFAULT_XMPP_HOST = 'example.com'
 #FACEBOOK_PAGE = 'example.com'
 #TWITTER_HANDLE = 'example_com'
 
+# You can (and should) customize social media texts for static pages. This is a dictionary of view
+# names and you can set the keys "meta_desc", "twitter_title", "twitter_desc", "og_title" and
+# "og_desc" for every named view.
+#SOCIAL_MEDIA_TEXTS = {
+#   'blog:home': {
+#       'meta_desc': _('Start page description (will show up on e.g. Google)'),
+#   }
+#}
+
 ########################
 # Celery configuration #
 ########################
 # See also: http://docs.celeryproject.org/en/latest/configuration.html
 
-#BROKER_URL = 'redis://localhost:6379/0'
+#CELERY_BROKER_URL = 'redis://localhost:6379/0'
 
 # The log format used by the celery loggers. If None (the default), the same as LOG_FORMAT will be
 # used.
-#CELERYD_LOG_FORMAT = None
+#CELERY_WORKER_LOG_FORMAT = None
 
 # The format used for Celery task loggers (-> get_task_logger()). The default is the same as the
 # normal default, except that the task name is added.
-#CELERYD_TASK_LOG_FORMAT = '[%(asctime).19s %(levelname)-8s] [%(task_name)s] %(message)s'
+#CELERY_WORKER_TASK_LOG_FORMAT = '[%(asctime).19s %(levelname)-8s] [%(task_name)s] %(message)s'
 
 ######################
 # Anti-Spam settings #
@@ -303,7 +353,7 @@ DEFAULT_XMPP_HOST = 'example.com'
 #
 #GPG_BACKENDS = {
 #    'default': {
-#        'BACKEND': 'gpgmime.gpgme.GpgMeBackend',
+#        'BACKEND': 'gpgliblib.gpgme.GpgMeBackend',
 #        'HOME': os.path.join(ROOT_DIR, 'gnupg'),
 #        # Optional settings:
 #        'PATH': '/home/...',  # Path to 'gpg' binary

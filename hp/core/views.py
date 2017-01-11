@@ -24,23 +24,21 @@ from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.utils import timezone
+from django.utils.functional import Promise
 from django.utils.http import is_safe_url
 from django.utils.translation import LANGUAGE_SESSION_KEY
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
-from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
-from django.views.generic.list import ListView
 from ua_parser import user_agent_parser
 
 from bootstrap.templatetags.bootstrap import glyph
+from core.utils import canonical_link
 
 from .forms import AnonymousContactForm
 from .forms import ContactForm
 from .forms import SelectOSForm
-from .models import Page
-from .models import BlogPost
 from .utils import check_dnsbl
 from .tasks import send_contact_email
 
@@ -104,6 +102,33 @@ class TranslateSlugViewMixin(object):
             raise Http404(_("No %(verbose_name)s found matching the query") %
                           {'verbose_name': queryset.model._meta.verbose_name})
         return obj
+
+
+class StaticContextMixin(object):
+    """Simple mixin that allows you to add a static dictionary to the template context."""
+
+    static_context = None
+
+    def get_context_data(self, **kwargs):
+        context = super(StaticContextMixin, self).get_context_data(**kwargs)
+        if self.static_context is not None:
+            context.update(self.static_context)
+
+        urlname = '%s:%s' % (self.request.resolver_match.namespace,
+                             self.request.resolver_match.url_name)
+
+        if urlname in settings.SOCIAL_MEDIA_TEXTS:
+            texts = settings.SOCIAL_MEDIA_TEXTS[urlname]
+
+            for key, value in texts.items():
+                if isinstance(value, (str, Promise)):
+                    value = value % self.request.site
+                context[key] = value
+
+        # set default canonical URL
+        context.setdefault('canonical_url', canonical_link(self.request.path))
+
+        return context
 
 
 class BlacklistMixin(object):
@@ -192,25 +217,16 @@ class RateLimitMixin(object):
         cache.set(cache_key, timestamps, timeout=86400)
 
 
-class PageView(TranslateSlugViewMixin, DetailView):
-    queryset = Page.objects.filter(published=True)
-
-
-class BlogPostListView(ListView):
-    queryset = BlogPost.objects.published().blog_order()
-    paginate_by = 10
-
-
-class BlogPostView(TranslateSlugViewMixin, DetailView):
-    queryset = BlogPost.objects.filter(published=True)
-    context_object_name = 'post'
-
-
-class ClientsView(TemplateView):
+class ClientsView(StaticContextMixin, TemplateView):
     template_name = 'core/clients.html'
 
     def get_os(self):
-        ua = user_agent_parser.Parse(self.request.META['HTTP_USER_AGENT'])
+        header = self.request.META.get('HTTP_USER_AGENT',
+                                       self.request.META.get('HTTP_USERAGENT'))
+        if not header:
+            return
+
+        ua = user_agent_parser.Parse(header)
         family = ua['os']['family']
 
         if family == 'Mac OS X':
@@ -240,7 +256,7 @@ class ClientsView(TemplateView):
         return context
 
 
-class ContactView(BlacklistMixin, DnsBlMixin, FormView):
+class ContactView(BlacklistMixin, DnsBlMixin, StaticContextMixin, FormView):
     # TODO: Use ratelimit mixin as well
     template_name = 'core/contact.html'
     success_url = reverse_lazy('core:contact')
@@ -276,16 +292,22 @@ class ContactView(BlacklistMixin, DnsBlMixin, FormView):
 
 class SetLanguageView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
+        request = self.request
+
         # Some bots might attempt to use this link without the lang parameter. If not present, this
         # view basically does nothing.
-        lang = self.request.GET.get('lang')
+        lang = request.GET.get('lang')
         if lang:
-            self.request.session[LANGUAGE_SESSION_KEY] = lang
+            request.session[LANGUAGE_SESSION_KEY] = lang
 
-        redirect_to = self.request.GET.get('next')
+        redirect_to = request.GET.get('next')
+
+        if not request.user.is_anonymous():
+            request.user.default_language = lang
+            request.user.save()
 
         # Ensure the user-originating redirection url is safe.
-        if not redirect_to or not is_safe_url(url=redirect_to, host=self.request.get_host()):
+        if not redirect_to or not is_safe_url(url=redirect_to, host=request.get_host()):
             redirect_to = '/'
 
         return redirect_to

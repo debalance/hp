@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License along with this project. If
 # not, see <http://www.gnu.org/licenses/>.
 
+import logging
 
 from django import template
 from django.utils.html import format_html
@@ -20,11 +21,12 @@ from django.utils.html import format_html
 from ..models import BlogPost
 from ..models import Page
 
+log = logging.getLogger(__name__)
 register = template.Library()
 
 
-@register.simple_tag
-def page(pk, title=None, anchor=None):
+@register.simple_tag(takes_context=True)
+def page(context, pk, title=None, anchor=None):
     """Get a link to a page based on its primary key.
 
     This template tag allows you to generate a HTML link based on the database primary key of a
@@ -47,7 +49,12 @@ def page(pk, title=None, anchor=None):
         Optionally adds an anchor tag to the link.
     """
 
-    page = Page.objects.get(pk=pk)
+    try:
+        page = Page.objects.get(pk=pk)
+    except Page.DoesNotExist:
+        log.error('%s: Page %s does not exist.', context['request'].path, pk)
+        return title or ''
+
     title = title or page.title.current
     url = page.get_absolute_url()
     if anchor is not None:
@@ -56,14 +63,19 @@ def page(pk, title=None, anchor=None):
     return format_html('<a href="{}">{}</a>', url, title)
 
 
-@register.simple_tag
-def post(pk, title=None, anchor=None):
+@register.simple_tag(takes_context=True)
+def post(context, pk, title=None, anchor=None):
     """Get a link to blog post based on its primary key.
 
     This templatetag works the same as :py:func:`~core.templatetags.blog.page`, except that it
     links to blog posts.
     """
-    post = BlogPost.objects.get(pk=pk)
+    try:
+        post = BlogPost.objects.get(pk=pk)
+    except BlogPost.DoesNotExist:
+        log.error('%s: BlogPost %s does not exist.', context['request'].path, pk)
+        return title or ''
+
     title = title or post.title.current
     url = post.get_absolute_url()
     if anchor is not None:

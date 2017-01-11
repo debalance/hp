@@ -37,6 +37,7 @@ from django.utils.translation import ugettext_noop
 from django.views.generic import View
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
+from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import FormView
@@ -44,7 +45,7 @@ from django.views.generic.edit import UpdateView
 
 from celery import chain
 from xmpp_http_upload.models import Upload
-from django_xmpp_backends import backend
+from xmpp_backends.django import xmpp_backend
 
 from core.constants import ACTIVITY_REGISTER
 from core.constants import ACTIVITY_RESET_PASSWORD
@@ -56,6 +57,7 @@ from core.views import AnonymousRequiredMixin
 from core.views import BlacklistMixin
 from core.views import DnsBlMixin
 from core.views import RateLimitMixin
+from core.views import StaticContextMixin
 
 from .constants import PURPOSE_DELETE
 from .constants import PURPOSE_REGISTER
@@ -79,7 +81,7 @@ log = logging.getLogger(__name__)
 _confirmation_qs = Confirmation.objects.valid().select_related('user')
 
 
-class AccountPageMixin(object):
+class AccountPageMixin(StaticContextMixin):
     """Mixin that adds the usermenu on the left to views where the user is logged in."""
 
     usermenu = (
@@ -93,6 +95,7 @@ class AccountPageMixin(object):
         ('account:delete', _('Delete account'), True),
     )
     usermenu_item = None
+    requires_email = False
     requires_confirmation = True
 
     def dispatch(self, request, *args, **kwargs):
@@ -104,36 +107,46 @@ class AccountPageMixin(object):
             context = self.get_context_data(**kwargs)
 
             return TemplateResponse(request, 'account/requires_confirmation.html', context)
+        elif self.requires_email and not request.user.email:
+            kwargs = {}
+            if isinstance(self, SingleObjectMixin):
+                self.object = self.get_object()
+                kwargs['object'] = self.object
+            context = self.get_context_data(**kwargs)
+
+            return TemplateResponse(request, 'account/requires_email.html', context)
 
         return super(AccountPageMixin, self).dispatch(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        context = super(AccountPageMixin, self).get_context_data(**kwargs)
-
+    def get_usermenu(self):
         usermenu = []
-        for urlname, title, requires_confirmation in self.usermenu:
-            if self.request.user.created_in_backend is False and requires_confirmation is True:
+        for urlname, config in settings.ACCOUNT_USER_MENU:
+            req_confirmation = config.get('requires_confirmation', True)
+            if self.request.user.created_in_backend is False and req_confirmation is True:
                 continue
 
             usermenu.append({
                 'path': reverse(urlname),
-                'title': title,
+                'title': config.get('title', 'No title'),
                 'active': ' active' if urlname == self.usermenu_item else '',
             })
-        context['usermenu'] = usermenu
+        return usermenu
 
+    def get_context_data(self, **kwargs):
+        context = super(AccountPageMixin, self).get_context_data(**kwargs)
+        context['usermenu'] = self.get_usermenu()
         return context
 
 
-class UserDetailView(DetailView):
-    """Custom detail view to use the current user."""
+class UserObjectMixin(object):
+    """Mixin that returns the current user as object for views using SingleObjectMixin."""
 
     def get_object(self):
         return self.request.user
 
 
 class RegistrationView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequiredMixin,
-                       CreateView):
+                       StaticContextMixin, CreateView):
     form_class = CreateUserForm
     model = User
     rate_activity = ACTIVITY_REGISTER
@@ -151,6 +164,10 @@ class RegistrationView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequ
             response = super(RegistrationView, self).form_valid(form)
             user = self.object
 
+            # save default language
+            user.default_language = lang
+            user.save()
+
             # log user creation, display help message.
             user.log(ugettext_noop('Account created.'), address=address)
             AddressActivity.objects.log(request, ACTIVITY_REGISTER, user=user, note=user.email)
@@ -158,10 +175,10 @@ class RegistrationView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequ
             messages.success(request, _(
                 """Successfully created the account %(username)s. A confirmation email was
 just sent to the email address you provided (%(email)s). Before you can use
-your account, you must click on the confirmation link in that email.""" % {
+your account, you must click on the confirmation link in that email.""") % {
                     'username': user.username,
                     'email': user.email,
-                }))
+            })
 
             user.backend = settings.AUTHENTICATION_BACKENDS[0]
             login(self.request, user)
@@ -174,8 +191,7 @@ your account, you must click on the confirmation link in that email.""" % {
         fp, key = form.get_gpg_data()
         if fp or key:
             gpg_task = add_gpg_key_task.si(
-                user_pk=user.pk, address=address, language=lang,
-                fingerprint=fp, key=key)
+                user_pk=user.pk, address=address, fingerprint=fp, key=key)
             task = chain(gpg_task, task)
         task.delay()
 
@@ -190,18 +206,33 @@ class ConfirmRegistrationView(FormView):
     success_url = reverse_lazy('account:detail')
     template_name = 'account/user_register_confirm.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.key = self.queryset.get(key=self.kwargs['key'])
+        except Confirmation.DoesNotExist:
+            # We set None here because we only want to show a 404 when the user actually submits a
+            # form. This is a minor protection against guessing attacks.
+            self.key = None
+
+        return super(ConfirmRegistrationView, self).dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super(ConfirmRegistrationView, self).get_form_kwargs()
+        if self.key is not None:
+            kwargs['instance'] = self.key.user
+        return kwargs
+
     def form_valid(self, form):
+        key = self.key
         request = self.request
         address = request.META['REMOTE_ADDR']
         password = form.cleaned_data['password']
 
-        with transaction.atomic():
-            try:
-                key = self.queryset.get(key=self.kwargs['key'])
-            except Confirmation.DoesNotExist:
-                return TemplateResponse(
-                    request, 'account/user_register_confirmation_not_found.html', {}, status=404)
+        if self.key is None:
+            return TemplateResponse(
+                request, 'account/user_register_confirmation_not_found.html', {}, status=404)
 
+        with transaction.atomic():
             key.user.confirmed = timezone.now()
             key.user.created_in_backend = True
             key.user.save()
@@ -212,8 +243,8 @@ class ConfirmRegistrationView(FormView):
                 login(request, key.user)
 
             # Actually create the user on the XMPP server
-            backend.create_user(username=key.user.node, domain=key.user.domain, password=password,
-                                email=key.user.email)
+            xmpp_backend.create_user(username=key.user.node, domain=key.user.domain,
+                                     password=password, email=key.user.email)
 
             key.user.log(ugettext_noop('Email address %(email)s confirmed.'), address,
                          email=key.user.email)
@@ -245,8 +276,16 @@ class LoginView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequiredMix
         if not is_safe_url(url=redirect_to, host=self.request.get_host()):
             redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
 
+        user = form.get_user()
+        now = timezone.now()
+
         # Okay, security check complete. Log the user in.
-        login(self.request, form.get_user())
+        login(self.request, user)
+        user.last_activity = now
+        xmpp_backend.set_last_activity(user.node, user.domain,
+                                       status='Logged in via homepage.',
+                                       timestamp=now)
+        user.save()
         return HttpResponseRedirect(redirect_to)
 
     def form_invalid(self, form):
@@ -260,7 +299,7 @@ class LoginView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequiredMix
         return context
 
 
-class UserView(LoginRequiredMixin, AccountPageMixin, UserDetailView):
+class UserView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView):
     """Main user settings view (/account)."""
 
     usermenu_item = 'account:detail'
@@ -310,8 +349,8 @@ class ConfirmResetPasswordView(FormView):
 
         with transaction.atomic():
             key = self.queryset.get(key=self.kwargs['key'])
-            backend.set_password(username=key.user.node, domain=key.user.domain,
-                                 password=form.cleaned_data['password'])
+            xmpp_backend.set_password(username=key.user.node, domain=key.user.domain,
+                                      password=form.cleaned_data['password'])
 
             key.user.log(ugettext_noop('Set new password.'), address)
             messages.success(request, _('Successfully changed your password.'))
@@ -323,7 +362,22 @@ class ConfirmResetPasswordView(FormView):
         return super(ConfirmResetPasswordView, self).form_valid(form)
 
 
+class SessionsView(LoginRequiredMixin, AccountPageMixin, TemplateView):
+    template_name = 'account/sessions.html'
+    usermenu_item = 'account:sessions'
+
+    def get_context_data(self, **kwargs):
+        context = super(SessionsView, self).get_context_data(**kwargs)
+        user = self.request.user
+        context['sessions'] = xmpp_backend.user_sessions(user.node, user.domain)
+        return context
+
+
 class NotificationsView(LoginRequiredMixin, AccountPageMixin, UpdateView):
+    form_class = NotificationsForm
+    requires_email = True
+    template_name = 'account/notifications.html'
+    usermenu_item = 'account:notifications'
 
     def get_object(self):
         return self.request.user.notifications
@@ -332,10 +386,6 @@ class NotificationsView(LoginRequiredMixin, AccountPageMixin, UpdateView):
         self.object = form.save()
         return HttpResponse('Ok.')
 
-    usermenu_item = 'account:notifications'
-    form_class = NotificationsForm
-    template_name = 'account/notifications.html'
-
 
 class SetPasswordView(LoginRequiredMixin, AccountPageMixin, FormView):
     form_class = SetPasswordForm
@@ -343,13 +393,18 @@ class SetPasswordView(LoginRequiredMixin, AccountPageMixin, FormView):
     template_name = 'account/set_password.html'
     usermenu_item = 'account:set_password'
 
+    def get_form_kwargs(self):
+        kwargs = super(SetPasswordView, self).get_form_kwargs()
+        kwargs['instance'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         request = self.request
         address = request.META['REMOTE_ADDR']
         user = request.user
         password = form.cleaned_data['password']
 
-        backend.set_password(username=user.node, domain=user.domain, password=password)
+        xmpp_backend.set_password(username=user.node, domain=user.domain, password=password)
         user.log(ugettext_noop('Set new password.'), address)
         AddressActivity.objects.log(request, ACTIVITY_SET_PASSWORD)
         messages.success(request, _('Successfully changed your password.'))
@@ -369,6 +424,7 @@ class SetEmailView(LoginRequiredMixin, AccountPageMixin, FormView):
         to = form.cleaned_data['email']
 
         # If REQUIRE_UNIQUE_EMAIL is true, validate uniquenss
+
         qs = User.objects.exclude(pk=user.pk).filter(email=to)
         if settings.REQUIRE_UNIQUE_EMAIL and qs.exists():
             form.add_error('email', _('Email address is already used by another account.'))
@@ -383,7 +439,7 @@ class SetEmailView(LoginRequiredMixin, AccountPageMixin, FormView):
             base_url=base_url, hostname=request.site['NAME'])
 
         messages.success(request, _(
-            'We sent you an email to your new email address %(email)s). Click on the link in it '
+            'We sent you an email to your new email address (%(email)s). Click on the link in it '
             'to confirm it.') % {'email': to})
         user.log(ugettext_noop('Requested change of email address to %(email)s.'), address,
                  email=to)
@@ -410,11 +466,9 @@ class ConfirmSetEmailView(LoginRequiredMixin, RedirectView):
         with transaction.atomic():
             # Update list of GPG keys
             user.gpg_keys.all().delete()
-            # TODO: remove old fallback value
-            gpg_keys = key.payload.get('gpg_recv_pub', key.payload.get('gpg_key'))
+            gpg_keys = key.payload.get('gpg_recv_pub')
             if gpg_keys:
-                add_gpg_key_task.delay(user_pk=user.pk, address=key.address.address,
-                                       language=request.LANGUAGE_CODE, key=gpg_keys)
+                add_gpg_key_task.delay(user_pk=user.pk, address=key.address.address, key=gpg_keys)
 
             user.save()
             key.delete()
@@ -428,7 +482,7 @@ class ConfirmSetEmailView(LoginRequiredMixin, RedirectView):
             return super(ConfirmSetEmailView, self).get_redirect_url()
 
 
-class HttpUploadView(LoginRequiredMixin, AccountPageMixin, UserDetailView):
+class HttpUploadView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView):
     usermenu_item = 'account:xep0363'
     template_name = 'account/xep0363.html'
 
@@ -438,14 +492,14 @@ class HttpUploadView(LoginRequiredMixin, AccountPageMixin, UserDetailView):
         return context
 
 
-class GpgView(LoginRequiredMixin, AccountPageMixin, UserDetailView):
+class GpgView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView):
     """Main user settings view (/account)."""
 
     usermenu_item = 'account:gpg'
     template_name = 'account/user_gpg.html'
 
 
-class RecentActivityView(LoginRequiredMixin, AccountPageMixin, UserDetailView):
+class RecentActivityView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView):
     """Main user settings view (/account)."""
 
     requires_confirmation = False
@@ -462,13 +516,14 @@ class DeleteAccountView(LoginRequiredMixin, AccountPageMixin, FormView):
     usermenu_item = 'account:delete'
     form_class = DeleteAccountForm
     template_name = 'account/delete.html'
+    requires_email = True
 
     def form_valid(self, form):
         password = form.cleaned_data['password']
         request = self.request
         user = request.user
 
-        if not backend.check_password(user.node, user.domain, password=password):
+        if not xmpp_backend.check_password(user.node, user.domain, password=password):
             form.add_error('password', _('The password is incorrect.'))
             return self.form_invalid(form)
 
@@ -501,7 +556,7 @@ class ConfirmDeleteAccountView(LoginRequiredMixin, AccountPageMixin, FormView):
         user = request.user
 
         # Check the password of the user again
-        if not backend.check_password(user.node, user.domain, password=password):
+        if not xmpp_backend.check_password(user.node, user.domain, password=password):
             form.add_error('password', _('The password is incorrect.'))
             return self.form_invalid(form)
 
@@ -510,11 +565,11 @@ class ConfirmDeleteAccountView(LoginRequiredMixin, AccountPageMixin, FormView):
 
         # Log the user out, delete data
         logout(request)
-        backend.remove_user(user.node, user.domain)
+        xmpp_backend.remove_user(user.node, user.domain)
         key.delete()
         user.delete()
 
-        return HttpResponseRedirect(reverse('core:home'))
+        return HttpResponseRedirect(reverse('blog:home'))
 
 
 class UserAvailableView(View):
@@ -540,6 +595,15 @@ class UserAvailableView(View):
         else:
             cache.set(cache_key, False, 30)
             return HttpResponse('')
+
+
+class StopUserSessionView(LoginRequiredMixin, View):
+    def delete(self, request, resource):
+        user = request.user
+
+        # TODO: improve message
+        xmpp_backend.stop_user_session(user.node, user.domain, resource, 'Request via homepage.')
+        return HttpResponse('ok')
 
 
 class DeleteHttpUploadView(LoginRequiredMixin, SingleObjectMixin, View):

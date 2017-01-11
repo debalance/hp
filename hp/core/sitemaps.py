@@ -16,9 +16,6 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
-from .models import BlogPost
-from .models import Page
-
 
 class SitemapMixin(object):
     protocol = 'https'
@@ -39,21 +36,6 @@ class SitemapMixin(object):
 
             done.add(url['location'])
             yield url
-
-
-class BasePageSitemap(Sitemap):
-    def lastmod(self, item):
-        return item.updated
-
-
-class BlogPostSitemap(SitemapMixin, BasePageSitemap):
-    def items(self):
-        return BlogPost.objects.filter(published=True)
-
-
-class PageSitemap(SitemapMixin, BasePageSitemap):
-    def items(self):
-        return Page.objects.filter(published=True)
 
 
 class StaticSitemap(SitemapMixin, Sitemap):
