@@ -66,6 +66,8 @@ _DEFAULT_INSTALLED_APPS = [
     'mptt',  # Tree structure for MenuItem
     'tinymce',  # Rich text editor
     'xmpp_http_upload',  # XEP-0363
+
+    'debug_toolbar',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -79,6 +81,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'core.middleware.TranslatedUrlConfigMiddleware',
     'core.middleware.CeleryMessageMiddleware',
     'core.middleware.HttpResponseExceptionMiddleware',
@@ -490,3 +493,10 @@ LOGGING = {
         'level': LIBRARY_LOG_LEVEL,
     },
 }
+
+if DEBUG:
+    def show_toolbar(request):
+        return True
+    DEBUG_TOOLBAR_CONFIG = {
+        "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
+    }

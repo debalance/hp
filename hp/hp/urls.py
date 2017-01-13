@@ -34,3 +34,9 @@ urlpatterns = [
     url(r'^', include('blog.urls')),
     url(r'^groups/', include('groups.urls')),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ]
