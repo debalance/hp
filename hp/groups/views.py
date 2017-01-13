@@ -24,9 +24,9 @@ from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.edit import CreateView
+#from django.views.generic.edit import CreateView
 #from django.views.generic.edit import TemplateView
-from django.views.generic.edit import UpdateView
+#from django.views.generic.edit import UpdateView
 
 from celery import chain
 from xmpp_http_upload.models import Upload
@@ -63,10 +63,10 @@ class GroupPageMixin(StaticContextMixin):
     """Mixin that adds the groupmenu on the left to views where the user is logged in."""
 
     groupmenu = (
-        ('group:detail',    _('Overview'),          False),
-        ('group:ownership', _('My Groups'),         True),
-        ('group:membership',_('My Memberships'),    True),
-        ('group:create',    _('Create new Group'),  True),
+        ('groups:detail',    {'title':_('Overview'),          'requires_confirmation': False }),
+        ('groups:ownership', {'title':_('My groups'),         'requires_confirmation': True  }),
+        ('groups:membership',{'title':_('My memberships'),    'requires_confirmation': True  }),
+        ('groups:create',    {'title':_('Create new group'),  'requires_confirmation': True  }),
     )
     groupmenu_item = None
     requires_email = False
@@ -93,7 +93,18 @@ class GroupPageMixin(StaticContextMixin):
         return super(GroupPageMixin, self).dispatch(request, *args, **kwargs)
 
     def get_groupmenu(self):
-        return self.groupmenu
+        groupmenu = []
+        for urlname, config in self.groupmenu:
+            req_confirmation = config.get('requires_confirmation', True)
+            if self.request.user.created_in_backend is False and req_confirmation is True:
+                continue
+
+            groupmenu.append({
+                'path': reverse(urlname),
+                'title': config.get('title', 'No title'),
+                'active': ' active' if urlname == self.groupmenu_item else '',
+            })
+        return groupmenu
 
     def get_context_data(self, **kwargs):
         context = super(GroupPageMixin, self).get_context_data(**kwargs)
@@ -104,22 +115,22 @@ class GroupPageMixin(StaticContextMixin):
 class GroupView(LoginRequiredMixin, GroupPageMixin, UserObjectMixin, TemplateView):
     """Main group settings view (/groups)."""
     template_name = 'groups/detail.html'
-    groupmenu_item = 'group:detail'
+    groupmenu_item = 'groups:detail'
     requires_confirmation = False
 
 
 class OwnershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/ownership.html'
-    groupmenu_item = 'group:ownership'
+    groupmenu_item = 'groups:ownership'
 
 
 class MembershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/membership.html'
-    groupmenu_item = 'group:membership'
+    groupmenu_item = 'groups:membership'
 
 
 class CreateView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/create.html'
-    groupmenu_item = 'group:create'
+    groupmenu_item = 'groups:create'
 
 

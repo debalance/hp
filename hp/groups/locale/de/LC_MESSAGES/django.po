@@ -1,13 +1,8 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-11 12:31+0100\n"
+"POT-Creation-Date: 2017-01-13 16:05+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,23 +35,23 @@ msgstr ""
 msgid "Show menu"
 msgstr "Menü"
 
-#: templates/groups/create.html:5 templates/groups/detail.html:5
-#: templates/groups/membership.html:5 templates/groups/ownership.html:5
+#: templates/groups/create.html:4 views.py:69
+msgid "Create new group"
+msgstr "Neue Gruppe erstellen"
+
+#: templates/groups/create.html:7 templates/groups/detail.html:7
+#: templates/groups/membership.html:7 templates/groups/ownership.html:7
 msgid "No content here yet."
 msgstr "Noch kein Inhalt vorhanden"
 
-#: views.py:91
-msgid "Overview"
-msgstr "Übersicht"
-
-#: views.py:92
-msgid "My Groups"
-msgstr "Meine Gruppen"
-
-#: views.py:93
-msgid "My Memberships"
+#: templates/groups/membership.html:4 views.py:68
+msgid "My memberships"
 msgstr "Meine Mitgliedschaften"
 
-#: views.py:94
-msgid "Create new Group"
-msgstr "Neue Gruppe erstellen"
+#: templates/groups/ownership.html:4 views.py:67
+msgid "My groups"
+msgstr "Meine Gruppen"
+
+#: views.py:66
+msgid "Overview"
+msgstr "Übersicht"
