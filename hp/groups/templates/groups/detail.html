@@ -1,8 +1,8 @@
 {% extends "groups/base.html" %}
-{% load i18n core bootstrap staticfiles %}
+{% load i18n %}
 
-{% block title %}{{ object.username }}{% endblock title %}
+{% block title %}{{ user.username }}{% endblock title %}
 
 {% block content %}
-<p>{% blocktrans %}No content here yet.{% endblocktrans %}
+<p>{% blocktrans %}No content here yet.{% endblocktrans %}</p>
 {% endblock content %}

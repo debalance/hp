@@ -24,35 +24,12 @@ from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
-#from django.views.generic.edit import CreateView
-#from django.views.generic.edit import TemplateView
-#from django.views.generic.edit import UpdateView
-
-from celery import chain
-from xmpp_http_upload.models import Upload
-from xmpp_backends.django import xmpp_backend
-
-from core.constants import ACTIVITY_REGISTER
-from core.constants import ACTIVITY_RESET_PASSWORD
-from core.constants import ACTIVITY_SET_EMAIL
-from core.constants import ACTIVITY_SET_PASSWORD
-from core.constants import ACTIVITY_FAILED_LOGIN
-from core.models import AddressActivity
-from core.views import AnonymousRequiredMixin
-from core.views import BlacklistMixin
-from core.views import DnsBlMixin
-from core.views import RateLimitMixin
-from core.views import StaticContextMixin
 
 from account.models import Confirmation
 from account.views import UserObjectMixin
+from core.views import StaticContextMixin
+from xmpp_backends.django import xmpp_backend
 
-#from .forms import TODO
-#from .forms import TODO
-#from .forms import TODO
-#from .forms import TODO
-
-#from .models import *
 
 User = get_user_model()
 log = logging.getLogger(__name__)
