@@ -1,0 +1,62 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-01-11 12:31+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/groups/base.html:14
+msgid "Group settings"
+msgstr "Gruppeneinstellungen"
+
+#: templates/groups/base.html:25
+msgid "Your account is not yet confirmed!"
+msgstr "Ihr Konto wurde noch nicht bestätigt!"
+
+#: templates/groups/base.html:26
+#, python-format
+msgid ""
+"You have not yet confirmed your email address. Your account registration is\n"
+"not complete until you have. We just sent you an email to %(email)s, click\n"
+"on the link in it and give us a password to complete the registration."
+msgstr ""
+"Sie haben ihre E-Mail-Adresse noch nicht bestätigt. Ihre Registrierung ist "
+"daher nicht abgeschlossen. Wir haben eine E-Mail an %(email)s geschickt, "
+"klicken sie auf den Link in der E-Mail um die Registrierung abzuschließen. "
+
+#: templates/groups/base.html:36
+msgid "Show menu"
+msgstr "Menü"
+
+#: templates/groups/create.html:5 templates/groups/detail.html:5
+#: templates/groups/membership.html:5 templates/groups/ownership.html:5
+msgid "No content here yet."
+msgstr "Noch kein Inhalt vorhanden"
+
+#: views.py:91
+msgid "Overview"
+msgstr "Übersicht"
+
+#: views.py:92
+msgid "My Groups"
+msgstr "Meine Gruppen"
+
+#: views.py:93
+msgid "My Memberships"
+msgstr "Meine Mitgliedschaften"
+
+#: views.py:94
+msgid "Create new Group"
+msgstr "Neue Gruppe erstellen"

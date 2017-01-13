@@ -52,6 +52,7 @@ _DEFAULT_INSTALLED_APPS = [
     'account',  # account management
     'feed',  # RSS/Atom feeds
     'conversejs',  # webchat
+    'groups',  # shared roster group management
 
     'django.contrib.admin',
     'django.contrib.auth',
