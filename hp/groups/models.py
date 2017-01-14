@@ -26,17 +26,38 @@ log = logging.getLogger(__name__)
 
 
 class Group(models.Model):
-    name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name')       )
-    description  = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description'))
-    displayed_to = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description'))
+    name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name')             )
+    description  = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description')      )
+    displayed_to = models.CharField(max_length=1023, unique=False, verbose_name=_('Displayed to this group'))
 
     owners  = models.ManyToManyField(User,  through='ownership',  through_fields=('group', 'user'), related_name='owner'  )
     members = models.ManyToManyField(User,  through='membership', through_fields=('group', 'user'), related_name='member' )
+
+    def __str__(self):
+        return self.name
 
 class ownership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     user  = models.ForeignKey(User,  on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.group.name + ": " + self.user.username
+
+    def groupname(self):
+        return self.group.name
+
+    def username(self):
+        return self.user.username
+
 class membership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     user  = models.ForeignKey(User,  on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.group.name + ": " + self.user.username
+
+    def groupname(self):
+        return self.group.name
+
+    def username(self):
+        return self.user.username

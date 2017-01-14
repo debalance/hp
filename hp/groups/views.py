@@ -25,6 +25,8 @@ from django.views.generic.base import RedirectView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 
+from .models import Group
+from account.models import User
 from account.models import Confirmation
 from account.views import UserObjectMixin
 from core.views import StaticContextMixin
@@ -40,7 +42,7 @@ class GroupPageMixin(StaticContextMixin):
     """Mixin that adds the groupmenu on the left to views where the user is logged in."""
 
     groupmenu = (
-        ('groups:detail',    {'title':_('Overview'),          'requires_confirmation': False }),
+        ('groups:overview',  {'title':_('Overview'),          'requires_confirmation': False }),
         ('groups:ownership', {'title':_('My groups'),         'requires_confirmation': True  }),
         ('groups:membership',{'title':_('My memberships'),    'requires_confirmation': True  }),
         ('groups:create',    {'title':_('Create new group'),  'requires_confirmation': True  }),
@@ -89,31 +91,38 @@ class GroupPageMixin(StaticContextMixin):
         return context
 
 
-class GroupView(LoginRequiredMixin, GroupPageMixin, UserObjectMixin, TemplateView):
+class OverView(LoginRequiredMixin, GroupPageMixin, UserObjectMixin, TemplateView):
     """Main group settings view (/groups)."""
-    template_name = 'groups/detail.html'
-    groupmenu_item = 'groups:detail'
+    template_name = 'groups/overview.html'
+    groupmenu_item = 'groups:overview'
     requires_confirmation = False
 
-    def my_memberships(self):   #TODO
-        return "??"
+    def my_memberships(self):
+        return "#TODO"
 
-    def my_ownerships(self):    #TODO
-        return "??"
+    def my_ownerships(self):
+        return "#TODO"
 
 
 class OwnershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/ownership.html'
     groupmenu_item = 'groups:ownership'
+    #TODO
 
 
 class MembershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/membership.html'
     groupmenu_item = 'groups:membership'
+    #TODO
 
 
 class CreateView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/create.html'
     groupmenu_item = 'groups:create'
+    #TODO
 
 
+class GroupView(LoginRequiredMixin, GroupPageMixin, DetailView):
+    model = Group
+    template_name = 'groups/group.html'
+    #TODO

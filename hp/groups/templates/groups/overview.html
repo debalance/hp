@@ -1,7 +1,7 @@
 {% extends "groups/base.html" %}
 {% load i18n %}
 
-{% block title %}{{ user.username }}{% endblock title %}
+{% block title %}{{ user.username }}<br>{% trans "Overview" %}{% endblock title %}
 
 {% block content %}
 <p>{% blocktrans %}This app allows you to manage shared roster groups.{% endblocktrans %}</p>

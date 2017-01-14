@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255, unique=True, verbose_name='Group name')),
                 ('description', models.CharField(max_length=1023, verbose_name='Group description')),
-                ('displayed_to', models.CharField(max_length=1023, verbose_name='Group description')),
+                ('displayed_to', models.CharField(max_length=1023, verbose_name='Displayed to this group')),
             ],
         ),
         migrations.CreateModel(
