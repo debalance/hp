@@ -1,7 +1,7 @@
 {% extends "groups/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Group details" %}{% endblock title %}
+{% block title %}{% trans "Details of group" %} '{{ group.name }}'{% endblock title %}
 
 {% block content %}
 <table class="table table-bordered">
@@ -14,8 +14,8 @@
 		<td>{{ group.description }}</td>
 	</tr>
 	<tr>
-		<th>{% trans "Displayed to group(s)" %}:</th>
-		<td>{{ group.displayed_to }}</td>
+		<th>{% trans "Displayed to this group" %}:</th>
+		<td>{% trans "members of group(s)" %} '{{ group.displayed_to }}'</td>
 	</tr>
 	<tr>
 		<th>{% trans "Owner(s)" %}:</th>
@@ -27,4 +27,5 @@
 	</tr>
 </table>
 <a href="/groups/edit/{{ group.id }}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a>
+<a href="/groups/leave/{{ group.id }}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
 {% endblock content %}

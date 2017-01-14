@@ -97,23 +97,15 @@ class OverView(LoginRequiredMixin, GroupPageMixin, UserObjectMixin, TemplateView
     groupmenu_item = 'groups:overview'
     requires_confirmation = False
 
-    def my_memberships(self):
-        return "#TODO"
-
-    def my_ownerships(self):
-        return "#TODO"
-
 
 class OwnershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/ownership.html'
     groupmenu_item = 'groups:ownership'
-    #TODO
 
 
 class MembershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/membership.html'
     groupmenu_item = 'groups:membership'
-    #TODO
 
 
 class CreateView(LoginRequiredMixin, GroupPageMixin, TemplateView):
@@ -135,3 +127,14 @@ class EditView(LoginRequiredMixin, GroupPageMixin, DetailView):
     template_name = 'groups/edit.html'
     #TODO
 
+class LeaveView(LoginRequiredMixin, GroupPageMixin, DetailView):
+    #TODO: only allow members+owners to see and use this
+    model = Group
+    template_name = 'groups/leave.html'
+    #TODO
+
+class DeleteView(LoginRequiredMixin, GroupPageMixin, DetailView):
+    #TODO: only allow owners to see and use this
+    model = Group
+    template_name = 'groups/delete.html'
+    #TODO

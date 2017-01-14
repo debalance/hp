@@ -1,18 +1,24 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-13 16:05+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2017-01-14 20:16+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: templates/groups/base.html:14
+#: models.py:29
+msgid "Group name"
+msgstr "Gruppenname"
+
+#: models.py:30
+msgid "Group description"
+msgstr "Gruppenbeschreibung"
+
+#: models.py:31 templates/groups/edit.html:14 templates/groups/group.html:17
+msgid "Displayed to this group"
+msgstr "Dieser Gruppe angezeigt"
+
+#: templates/groups/base.html:14 templates/groups/overview.html:7
 msgid "Group settings"
 msgstr "Gruppeneinstellungen"
 
@@ -35,23 +41,118 @@ msgstr ""
 msgid "Show menu"
 msgstr "Menü"
 
-#: templates/groups/create.html:4 views.py:69
+#: templates/groups/create.html:4 views.py:48
 msgid "Create new group"
 msgstr "Neue Gruppe erstellen"
 
-#: templates/groups/create.html:7 templates/groups/detail.html:7
-#: templates/groups/membership.html:7 templates/groups/ownership.html:7
-msgid "No content here yet."
-msgstr "Noch kein Inhalt vorhanden"
+#: templates/groups/create.html:7 templates/groups/delete.html:7
+#: templates/groups/leave.html:7
+msgid "Not implemented yet."
+msgstr "Noch nicht implementiert."
 
-#: templates/groups/membership.html:4 views.py:68
+#: templates/groups/delete.html:4
+msgid "Delete group"
+msgstr "Lösche Gruppe"
+
+#: templates/groups/edit.html:4
+msgid "Edit details of group"
+msgstr "Editiere Details von Gruppe"
+
+#: templates/groups/edit.html:10 templates/groups/group.html:13
+msgid "Description"
+msgstr "Beschreibung"
+
+#: templates/groups/edit.html:18 templates/groups/group.html:21
+msgid "Owner(s)"
+msgstr "Besitzer"
+
+#: templates/groups/edit.html:22 templates/groups/group.html:25
+msgid "Member(s)"
+msgstr "Mitglieder"
+
+#: templates/groups/edit.html:26 templates/groups/group.html:30
+#: templates/groups/membership.html:23 templates/groups/ownership.html:25
+msgid "Leave group..."
+msgstr "Gruppe verlassen..."
+
+#: templates/groups/edit.html:27
+msgid "Delete group..."
+msgstr "Gruppe löschen..."
+
+#: templates/groups/group.html:4
+msgid "Details of group"
+msgstr "Details der Gruppe"
+
+#: templates/groups/group.html:9
+msgid "Name"
+msgstr "Name"
+
+#: templates/groups/group.html:18
+msgid "members of group(s)"
+msgstr "Mitglieder der Gruppe(n)"
+
+#: templates/groups/group.html:29 templates/groups/ownership.html:24
+msgid "Edit group..."
+msgstr "Gruppe editieren..."
+
+#: templates/groups/leave.html:4
+msgid "Leave group"
+msgstr "Verlasse Gruppe"
+
+#: templates/groups/membership.html:11 views.py:47
 msgid "My memberships"
 msgstr "Meine Mitgliedschaften"
 
-#: templates/groups/ownership.html:4 views.py:67
+#: templates/groups/membership.html:22 templates/groups/ownership.html:23
+msgid "More information..."
+msgstr "Weitere Informationen..."
+
+#: templates/groups/overview.html:8
+msgid ""
+"This app allows you to manage shared roster groups.\n"
+"These groups have owners and members.\n"
+"It is possible to own a group without being a member of it\n"
+"and (most importantly) it is possible to be a member of a group owned by "
+"somebody else.\n"
+"All group members have each other automatically on their roster (i.e. "
+"contact list)\n"
+"and are subscribed to each other's presence (i.e. online status).\n"
+"You can leave groups at any time."
+msgstr ""
+"Mit dieser App können Sie gemeinsame Roster-Gruppen verwalten. Diese Gruppen "
+"haben Eigentümer und Mitglieder. Es ist möglich eine Gruppe zu besitzen ohne "
+"darin Mitglied zu sein und (am allerwichtigsten) Mitglied einer Gruppe von "
+"jemand anderem zu sein. Alle Gruppenmitglieder haben sich gegenseitig "
+"automatisch in ihrem Roster (Kontaktliste) und können den Online-Status "
+"aller anderen Mitglieder sehen. Gruppen können jederzeit verlassen werden."
+
+#: templates/groups/overview.html:16
+#, python-format
+msgid "You currently own %(own)s groups, go to 'My groups' to manage them."
+msgstr ""
+"Sie besitzen aktuell %(own)s Gruppen, gehen sie zu 'Meine Gruppen' um diese "
+"zu verwalten."
+
+#: templates/groups/overview.html:17
+#, python-format
+msgid ""
+"You are currently a member of %(mem)s groups, go to 'My memberships' to view "
+"and/or leave them."
+msgstr ""
+"Sie sind aktuell Mitglied von %(mem)s Gruppen, gehen sie zu 'Meine "
+"Mitgliedschaften' um diese zu betrachten und/oder zu verlassen."
+
+#: templates/groups/overview.html:18
+msgid "You can create a new group at any time."
+msgstr "Sie können jederzeit eine neue Gruppe anlegen."
+
+#: templates/groups/ownership.html:11 views.py:46
 msgid "My groups"
 msgstr "Meine Gruppen"
 
-#: views.py:66
+#: views.py:45
 msgid "Overview"
 msgstr "Übersicht"
+
+#~ msgid "Group details"
+#~ msgstr "Gruppendetails"

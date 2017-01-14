@@ -11,4 +11,6 @@ urlpatterns = [
     url(r'^create/$',              views.CreateView.as_view(),     name='create'     ),
     url(r'^details/(?P<pk>\d+)/$', views.GroupView.as_view(),      name='details'    ),
     url(r'^edit/(?P<pk>\d+)/$',    views.EditView.as_view(),       name='edit'       ),
+    url(r'^leave/(?P<pk>\d+)/$',   views.LeaveView.as_view(),      name='leave'      ),
+    url(r'^delete/(?P<pk>\d+)/$',  views.DeleteView.as_view(),     name='delete'     ),
 ]
