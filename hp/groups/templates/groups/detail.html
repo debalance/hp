@@ -4,5 +4,7 @@
 {% block title %}{{ user.username }}{% endblock title %}
 
 {% block content %}
-<p>{% blocktrans %}No content here yet.{% endblocktrans %}</p>
+<p>{% blocktrans %}This app allows you to manage shared roster groups.{% endblocktrans %}</p>
+<p>{% blocktrans with own=view.my_ownerships %}You currently own {{ own }} groups.{% endblocktrans %}</p>
+<p>{% blocktrans with mem=view.my_memberships %}You are currently a member of another {{ mem }} groups.{% endblocktrans %}</p>
 {% endblock content %}

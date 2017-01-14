@@ -95,6 +95,12 @@ class GroupView(LoginRequiredMixin, GroupPageMixin, UserObjectMixin, TemplateVie
     groupmenu_item = 'groups:detail'
     requires_confirmation = False
 
+    def my_memberships(self):   #TODO
+        return "??"
+
+    def my_ownerships(self):    #TODO
+        return "??"
+
 
 class OwnershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     template_name = 'groups/ownership.html'

@@ -20,40 +20,23 @@ from django.utils.crypto import salted_hmac
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext_noop
 
+from account.models import User
 
 log = logging.getLogger(__name__)
 
 
-#class Group(models.Model):
-#    name = models.CharField(max_length=255, unique=True, verbose_name=_('SharedRosterGroup'))
-#    Members = models.ManyToManyField(
-#        Member,
-#        through='Membership',
-#        through_fields=('Group', 'Member'),
-#    )
-#    owners = models.ManyToManyField(
-#        Member,
-#        through='Ownership',
-#        through_fields=('Group', 'Member'),
-#    )
-#    display = models.ManyToManyFiled(
-#        Member,
-#        through='Display',
-#        through_fields=('Group', 'Member'),
-#    )
-#
-#class Member(models.Model):
-#    name = models.CharField(max_length=255, unique=True, verbose_name=_('Membername'))
-#    Group = models.ForeignKey(Group)
-#
-#class Membership(models.Model):
-#    Group = models.ForeignKey(Group, on_delete=models.CASCADE)
-#    Member = models.ForeignKey(Member, on_delete=models.CASCADE)
-#
-#class Ownership(models.Model):
-#    Group = models.ForeignKey(Group, on_delete=models.CASCADE)
-#    Member = models.ForeignKey(Member, on_delete=models.CASCADE)
-#
-#class Display(models.Model):
-#    Group = models.ForeignKey(Group, on_delete=models.CASCADE)
-#    Member = models.ForeignKey(Member, on_delete=models.CASCADE)
+class Group(models.Model):
+    name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name')       )
+    description  = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description'))
+    displayed_to = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description'))
+
+    owners  = models.ManyToManyField(User,  through='ownership',  through_fields=('group', 'user'), related_name='owner'  )
+    members = models.ManyToManyField(User,  through='membership', through_fields=('group', 'user'), related_name='member' )
+
+class ownership(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    user  = models.ForeignKey(User,  on_delete=models.CASCADE)
+
+class membership(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    user  = models.ForeignKey(User,  on_delete=models.CASCADE)
