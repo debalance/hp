@@ -123,6 +123,15 @@ class CreateView(LoginRequiredMixin, GroupPageMixin, TemplateView):
 
 
 class GroupView(LoginRequiredMixin, GroupPageMixin, DetailView):
+    #TODO: only allow members+owners to see group information, show edit button only to owners
     model = Group
     template_name = 'groups/group.html'
     #TODO
+
+
+class EditView(LoginRequiredMixin, GroupPageMixin, DetailView):
+    #TODO: only allow members+owners to see and edit group information
+    model = Group
+    template_name = 'groups/edit.html'
+    #TODO
+

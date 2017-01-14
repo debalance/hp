@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^membership/$',          views.MembershipView.as_view(), name='membership' ),
     url(r'^create/$',              views.CreateView.as_view(),     name='create'     ),
     url(r'^details/(?P<pk>\d+)/$', views.GroupView.as_view(),      name='details'    ),
+    url(r'^edit/(?P<pk>\d+)/$',    views.EditView.as_view(),       name='edit'       ),
 ]

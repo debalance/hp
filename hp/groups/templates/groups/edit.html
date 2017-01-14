@@ -1,14 +1,10 @@
 {% extends "groups/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Group details" %}{% endblock title %}
+{% block title %}{% trans "Editing details for group " %}'{{ group.name }}'{% endblock title %}
 
 {% block content %}
 <table class="table table-bordered">
-	<tr>
-		<th>{% trans "Name" %}:</th>
-		<td>{{ group.name }}</td>
-	</tr>
 	<tr>
 		<th>{% trans "Description" %}:</th>
 		<td>{{ group.description }}</td>
@@ -26,5 +22,4 @@
 		<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
 	</tr>
 </table>
-<a href="/groups/edit/{{ group.id }}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a>
 {% endblock content %}
