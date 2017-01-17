@@ -36,6 +36,11 @@ class Group(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('groups:details', args=[str(self.id)])
+
+
 class ownership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     user  = models.ForeignKey(User,  on_delete=models.CASCADE)
@@ -49,6 +54,7 @@ class ownership(models.Model):
     def username(self):
         return self.user.username
 
+
 class membership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     user  = models.ForeignKey(User,  on_delete=models.CASCADE)
@@ -61,3 +67,4 @@ class membership(models.Model):
 
     def username(self):
         return self.user.username
+

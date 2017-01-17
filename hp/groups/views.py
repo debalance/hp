@@ -8,10 +8,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
-from django.db import transaction
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
@@ -27,6 +25,8 @@ from django.views.generic import FormView
 from django.views.generic.base import RedirectView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.edit import CreateView
+from django.views.generic.edit import UpdateView
 
 from .models import Group
 from .models import membership
@@ -147,9 +147,12 @@ class MembershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     groupmenu_item = 'groups:membership'
 
 
-class CreateView(LoginRequiredMixin, GroupPageMixin, TemplateView):
+class CreateView(LoginRequiredMixin, GroupPageMixin, CreateView):
     template_name = 'groups/create.html'
     groupmenu_item = 'groups:create'
+    model = Group
+    fields = [ 'name', 'description' ]
+    def form_valid(self, form):
     #TODO
 
 
@@ -176,9 +179,11 @@ class LeaveView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
         return HttpResponseRedirect(reverse('groups:membership'))
 
 
-class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
-    model = Group
+class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, UpdateView):
     template_name = 'groups/edit.html'
+    model = Group
+    fields = [ 'name', 'description' ]
+
 
     def authorized(self):
         user = self.request.user
