@@ -20,9 +20,9 @@
     <tr>
       <td>{{ group.name }}</td>
       <td>"{{ group.description }}"</td>
-      <td><a href="/groups/details/{{ group.id }}" class="btn btn-default" role="button">{% trans "More information..." %}</a></td>
-      <td><a href="/groups/edit/{{ group.id }}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a></td>
-      <td><a href="/groups/leave/{{ group.id }}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a></td>
+      <td><a href="{% url 'groups:details' group.id %}" class="btn btn-default" role="button">{% trans "More information..." %}</a></td>
+      <td><a href="{% url 'groups:edit' group.id %}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a></td>
+      <td><a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a></td>
     </tr>
     {% endfor %}
   </tbody>

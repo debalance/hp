@@ -23,7 +23,7 @@
 		<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
 	</tr>
 </table>
-<a href="/groups/leave/{{ group.id }}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
-<a href="/groups/delete/{{ group.id }}" class="btn btn-default" role="button">{% trans "Delete group..." %}</a>
+<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
+<a href="{% url 'groups:delete' group.id %}" class="btn btn-default" role="button">{% trans "Delete group..." %}</a>
 
 {% endblock content %}

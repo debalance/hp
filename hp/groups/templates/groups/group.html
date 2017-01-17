@@ -26,6 +26,6 @@
 		<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
 	</tr>
 </table>
-<a href="/groups/edit/{{ group.id }}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a>
-<a href="/groups/leave/{{ group.id }}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
+<a href="{% url 'groups:edit' group.id %}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a>
+<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
 {% endblock content %}
