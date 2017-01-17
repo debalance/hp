@@ -1,31 +1,46 @@
 {% extends "groups/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Details of group" %} '{{ group.name }}'{% endblock title %}
+{% block title %}
+{% if view.authorized %}
+	{% trans "Details of group" %} '{{ group.name }}'
+{% else %}
+	{% trans "Details of group" %} {{ group.id }}
+{% endif %}
+{% endblock title %}
 
 {% block content %}
-<table class="table table-bordered">
-	<tr>
-		<th>{% trans "Name" %}:</th>
-		<td>{{ group.name }}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Description" %}:</th>
-		<td>{{ group.description }}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Displayed to this group" %}:</th>
-		<td>{% trans "members of group(s)" %} '{{ group.displayed_to }}'</td>
-	</tr>
-	<tr>
-		<th>{% trans "Owner(s)" %}:</th>
-		<td>{% for user in group.owners.all %}{{ user.username }}<br>{% endfor %}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Member(s)" %}:</th>
-		<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
-	</tr>
-</table>
-<a href="{% url 'groups:edit' group.id %}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a>
-<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
+{% if view.authorized %}
+	<table class="table table-bordered">
+		<tr>
+			<th>{% trans "Name" %}:</th>
+			<td>{{ group.name }}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Description" %}:</th>
+			<td>{{ group.description }}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Displayed to this group" %}:</th>
+			<td>{% trans "members of group(s)" %} '{{ group.displayed_to }}'</td>
+		</tr>
+		<tr>
+			<th>{% trans "Owner(s)" %}:</th>
+			<td>{% for user in group.owners.all %}{{ user.username }}<br>{% endfor %}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Member(s)" %}:</th>
+			<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
+		</tr>
+	</table>
+{% else %}
+	<p>{% trans "You are not authorized to use this page." %}</p>
+{% endif %}
+{% if view.authorized_to_edit %}
+	<a href="{% url 'groups:edit' group.id %}" class="btn btn-default" role="button">{% trans "Edit group..." %}</a>
+{% endif %}
+{% if view.authorized_to_leave %}
+	<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
+{% endif %}
 {% endblock content %}
+

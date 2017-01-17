@@ -1,8 +1,22 @@
 {% extends "groups/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Leave group" %} '{{ group.name }}'{% endblock title %}
+{% block title %}
+{% if view.authorized_to_leave %}
+	{% trans "Leave group" %} '{{ group.name }}'
+{% else %}
+	{% trans "Leave group" %} {{ group.id }}
+{% endif %}
+{% endblock title %}
 
 {% block content %}
-<p>{% blocktrans %}Not implemented yet.{% endblocktrans %}</p>
+{% if view.authorized_to_leave %}
+	<p>{% trans "Are you sure you want to leave this group?" %}</p>
+	<form class="form-horizontal" action="" method="post">
+		{% csrf_token %}
+		<button type="submit" class="btn btn-default">{% trans "Yes, leave this group!" %}</button>
+	</form>
+{% else %}
+	<p>{% trans "You are not authorized to use this page." %}</p>
+{% endif %}
 {% endblock content %}

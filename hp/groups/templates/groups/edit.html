@@ -1,29 +1,40 @@
 {% extends "groups/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Edit details of group" %} '{{ group.name }}'{% endblock title %}
+{% block title %}
+{% if view.authorized_to_edit %}
+	{% trans "Edit details of group" %} '{{ group.name }}'
+{% else %}
+	{% trans "Edit details of group" %} {{ group.id }}
+{% endif %}
+{% endblock title %}
 
 {% block content %}
-
-<table class="table table-bordered">
-	<tr>
-		<th>{% trans "Description" %}:</th>
-		<td>{{ group.description }}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Displayed to this group" %}:</th>
-		<td>{{ group.displayed_to }}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Owner(s)" %}:</th>
-		<td>{% for user in group.owners.all %}{{ user.username }}<br>{% endfor %}</td>
-	</tr>
-	<tr>
-		<th>{% trans "Member(s)" %}:</th>
-		<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
-	</tr>
-</table>
-<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
-<a href="{% url 'groups:delete' group.id %}" class="btn btn-default" role="button">{% trans "Delete group..." %}</a>
-
+{% if view.authorized_to_edit %}
+	<table class="table table-bordered">
+		<tr>
+			<th>{% trans "Description" %}:</th>
+			<td>{{ group.description }}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Displayed to this group" %}:</th>
+			<td>{{ group.displayed_to }}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Owner(s)" %}:</th>
+			<td>{% for user in group.owners.all %}{{ user.username }}<br>{% endfor %}</td>
+		</tr>
+		<tr>
+			<th>{% trans "Member(s)" %}:</th>
+			<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
+		</tr>
+	</table>
+	<a href="{% url 'groups:delete' group.id %}" class="btn btn-default" role="button">{% trans "Delete group..." %}</a>
+	{% if view.authorized_to_leave %}
+		<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
+	{% endif %}
+{% else %}
+	<p>{% trans "You are not authorized to use this page." %}</p>
+{% endif %}
 {% endblock content %}
+

@@ -4,26 +4,25 @@
 {% block title %}{{ user.username }}{% endblock title %}
 
 {% block content %}
-
 <table class="table table-striped table-hover">
-  <thead>
-    <tr>
-      <th><h3>{% trans "My memberships" %}</h3></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for group in user.member.all %}
-    <tr>
-      <td>{{ group.name }}</td>
-      <td>"{{ group.description }}"</td>
-      <td><a href="{% url 'groups:details' group.id %}" class="btn btn-default" role="button">{% trans "More information..." %}</a></td>
-      <td><a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a></td>
-    </tr>
-    {% endfor %}
-  </tbody>
+	<thead>
+		<tr>
+			<th><h3>{% trans "My memberships" %}</h3></th>
+			<th></th>
+			<th></th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for group in user.member.all %}
+		<tr>
+			<td>{{ group.name }}</td>
+			<td>"{{ group.description }}"</td>
+			<td><a href="{% url 'groups:details' group.id %}" class="btn btn-default" role="button">{% trans "More information..." %}</a></td>
+			<td><a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a></td>
+		</tr>
+		{% endfor %}
+	</tbody>
 </table>
-
 {% endblock content %}
+

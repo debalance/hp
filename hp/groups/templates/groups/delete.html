@@ -1,8 +1,23 @@
 {% extends "groups/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Delete group" %} '{{ group.name }}'{% endblock title %}
+{% block title %}
+{% if view.authorized_to_edit %}
+	{% trans "Delete group" %} '{{ group.name }}'
+{% else %}
+	{% trans "Delete group" %} {{ group.id }}
+{% endif %}
+{% endblock title %}
 
 {% block content %}
-<p>{% blocktrans %}Not implemented yet.{% endblocktrans %}</p>
+{% if view.authorized_to_edit %}
+	<p>{% trans "Are you sure you want to delete this group? This action will be final." %}</p>
+	<form class="form-horizontal" action="" method="post">
+		{% csrf_token %}
+		<button type="submit" class="btn btn-default">{% trans "Yes, delete this group!" %}</button>
+	</form>
+{% else %}
+	<p>{% trans "You are not authorized to use this page." %}</p>
+{% endif %}
 {% endblock content %}
+
