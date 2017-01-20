@@ -4,10 +4,47 @@
 {% block title %}{% trans "Create new group" %}{% endblock title %}
 
 {% block content %}
-<form action="" method="post">
+<form class="form-horizontal" action="" method="post">
 	{% csrf_token %}
-	{{ form.as_p }}
-	<button type="submit" class="btn btn-default">{% trans "Create" %}</button>
+	<div class="row">
+		<div class="col-sm-3"></div>
+		<div class="col-sm-9">{{ form.non_field_errors }}</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-3"></div>
+		<div class="col-sm-9">{{ form.group_name.errors }}</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-3">
+			{{ form.group_name.label_tag }}<br>
+			{% trans "The group name cannot be changed once the group has been created, so choose carefully!" %}
+		
+		</div>
+		<div class="col-sm-9">
+			{{ form.group_name }}<br>
+			{{ form.group_name.help_text }}
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-3"></div>
+		<div class="col-sm-9">{{ form.group_description.errors }}</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-3">
+			{{ form.group_description.label_tag }}<br>
+			{% trans "The group description can be changed later on." %}
+		</div>
+		<div class="col-sm-9">
+			{{ form.group_description }}<br>
+			{{ form.group_description.help_text }}
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-3"></div>
+		<div class="col-sm-9"><button type="submit" class="btn btn-default">{% trans "Create group" %}</button></div>
+	</div>
 </form>
 {% endblock content %}
 

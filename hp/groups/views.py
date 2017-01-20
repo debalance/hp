@@ -37,6 +37,7 @@ from account.views import UserObjectMixin
 from core.views import StaticContextMixin
 from xmpp_backends.django import xmpp_backend
 
+from .forms import CreateGroupForm
 
 #
 # context menu
@@ -147,13 +148,29 @@ class MembershipView(LoginRequiredMixin, GroupPageMixin, TemplateView):
     groupmenu_item = 'groups:membership'
 
 
-class CreateView(LoginRequiredMixin, GroupPageMixin, CreateView):
+class CreateGroupView(LoginRequiredMixin, GroupPageMixin, FormView):
     template_name = 'groups/create.html'
     groupmenu_item = 'groups:create'
-    model = Group
-    fields = [ 'name', 'description' ]
+    form_class = CreateGroupForm
+
     def form_valid(self, form):
-    #TODO
+        new_group = Group(
+            name = form.cleaned_data.get('group_name'),
+            description = form.cleaned_data.get('group_description'),
+            displayed_to = form.cleaned_data.get('group_name'),
+        )
+        new_group.save()
+        new_ownership = ownership(
+            group = new_group,
+            user = self.request.user,
+        )
+        new_ownership.save()
+        new_membership = membership(
+            group = new_group,
+            user = self.request.user,
+        )
+        new_membership.save()
+        return HttpResponseRedirect(new_group.get_absolute_url())
 
 
 #
@@ -183,15 +200,6 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, UpdateView):
     template_name = 'groups/edit.html'
     model = Group
     fields = [ 'name', 'description' ]
-
-
-    def authorized(self):
-        user = self.request.user
-        group = get_object_or_404(Group, pk=self.kwargs['pk'])
-        if group in user.owner.all():
-            return True
-        else:
-            return False
     #TODO
 
 
