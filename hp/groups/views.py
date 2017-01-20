@@ -26,6 +26,7 @@ from django.views.generic.base import RedirectView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView
+from django.views.generic.edit import FormMixin
 from django.views.generic.edit import UpdateView
 
 from .models import Group
@@ -38,6 +39,8 @@ from core.views import StaticContextMixin
 from xmpp_backends.django import xmpp_backend
 
 from .forms import CreateGroupForm
+from .forms import EditGroupForm
+
 
 #
 # context menu
@@ -108,7 +111,7 @@ class GroupAuthMixin():
             return True
         else:
             return False
-    
+
     def authorized_to_leave(self):
         user = self.request.user
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
@@ -116,7 +119,7 @@ class GroupAuthMixin():
             return True
         else:
             return False
-    
+
     def authorized(self):
         user = self.request.user
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
@@ -184,7 +187,7 @@ class GroupView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
 class LeaveView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
     model = Group
     template_name = 'groups/leave.html'
-    
+
     def post(self, request, *args, **kwargs):
         user = self.request.user
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
@@ -196,11 +199,44 @@ class LeaveView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
         return HttpResponseRedirect(reverse('groups:membership'))
 
 
-class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, UpdateView):
+class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, DetailView):
     template_name = 'groups/edit.html'
     model = Group
-    fields = [ 'name', 'description' ]
-    #TODO
+    form_class = EditGroupForm
+
+    def get_initial(self):
+        group = get_object_or_404(Group, pk=self.kwargs['pk'])
+        initial = super(EditView, self).get_initial()
+        initial['group_description'] = group.description
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super(EditView, self).get_context_data(**kwargs)
+        context['form'] = self.get_form()
+        return context
+
+    #TODO: add delete function for members/owners
+    #TODO: allow to edit displayed_groups if user owns them all
+
+    def post(self, request, *args, **kwargs):
+    #TODO: find out which butten was pressed and act accordingly
+        user = self.request.user
+        group = get_object_or_404(Group, pk=self.kwargs['pk'])
+        if group in user.owner.all():
+            self.object = self.get_object()
+            form = self.get_form()
+            if form.is_valid():
+                return self.form_valid(form, group)
+            else:
+                return self.form_invalid(form)
+        else:
+            messages.error(self.request, _("You are not an owner of this group so you cannot edit it!"))
+            return HttpResponseRedirect(reverse('groups:ownership'))
+
+    def form_valid(self, form, group):
+        group.description = form.cleaned_data.get('group_description')
+        group.save()
+        return HttpResponseRedirect(reverse('groups:edit', args=(group.id,)))
 
 
 class DeleteView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):

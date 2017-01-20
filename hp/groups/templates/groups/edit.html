@@ -1,51 +1,186 @@
 {% extends "groups/base.html" %}
-{% load i18n %}
+{% load i18n bootstrap staticfiles %}
+
+{% block extrajs %}
+{{ block.super }}
+<script src="{% static 'groups/js/counter.js' %}"></script>
+{% endblock extrajs %}
+
+{% block extracss %}
+{{ block.super }}
+<link href="{% static 'groups/css/edit.css' %}" rel="stylesheet">
+{% endblock extracss %}
 
 {% block title %}
 {% if view.authorized_to_edit %}
-	{% trans "Edit details of group" %} '{{ group.name }}'
+	{% trans "Edit settings of group" %} '{{ group.name }}'
 {% else %}
-	{% trans "Edit details of group" %} {{ group.id }}
+	{% trans "Edit settings of group" %} {{ group.id }}
 {% endif %}
 {% endblock title %}
 
 {% block content %}
 {% if view.authorized_to_edit %}
-	<h3>{% trans "New details" %}</h3>
+	<h3>{% trans "Current settings" %}</h3>
+	<br>
+	<div class="row">
+		<div class="col-sm-3">
+			<strong>{% trans "Name" %}:</strong>
+		</div>
+		<div class="col-sm-9">
+			<table class="table-hover table-condensed">
+				<tr><td>{{ group.name }}</td></tr>
+			</table>
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-3">
+			<strong>{% trans "Description" %}:</strong>
+		</div>
+		<div class="col-sm-9">
+			<table class="table-hover table-condensed">
+				<tr><td>{{ group.description }}</td></tr>
+			</table>
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-3">
+			<strong>{% trans "Displayed to this group" %}:*</strong>
+		</div>
+		<div class="col-sm-9">
+			<table class="table-hover table-condensed">
+				<tr><td>{{ group.displayed_to }}</td></tr>
+			</table>
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-3">
+			<strong>{% trans "Owner(s)" %}:</strong>
+		</div>
+		<div class="col-sm-9">
+			<table class="table-hover table-condensed">
+				{% for user in group.owners.all %}
+					<tr>
+						<td>{{ user.username }}</td>
+						<td class="delete">{% glyph "trash" %}</td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-3">
+			<strong>{% trans "Member(s)" %}:</strong>
+		</div>
+		<div class="col-sm-9">
+			<table class="table-hover table-condensed">
+				{% for user in group.members.all %}
+					<tr>
+						<td>{{ user.username }}</td>
+						<td class="delete">{% glyph "trash" %}</td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+	<br>
+	<br>
+	<p>* {% blocktrans %}Changing what other groups members of this group can see is disabled for privacy reasons.
+	If you require a more complex setup involving multiple groups please contact the Jabber team.{% endblocktrans %}</p>
+	<hr>
+	<h3>{% trans "New settings" %}</h3>
+	<br>
 	<form action="" method="post">
 		{% csrf_token %}
-		{{ form.as_p }}
-		<button type="submit" class="btn btn-default">{% trans "Update" %}</button>
+		<div class="row">
+			<div class="col-sm-3">
+				{{ form.member_name.label_tag }}<br>
+				{{ form.owner_name.help_text }}
+			</div>
+			<div class="col-sm-8">
+				{{ form.member_name }}<br>
+				{{ form.member_name.help_text }}
+			</div>
+			<div class="col-sm-1">
+				<button type="submit" class="btn btn-default">{% trans "Add" %}</button>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				{{ form.owner_name.label_tag }}<br>
+				{{ form.owner_name.help_text }}
+			</div>
+			<div class="col-sm-8">
+				{{ form.owner_name }}
+			</div>
+			<div class="col-sm-1">
+				<button type="submit" class="btn btn-default">{% trans "Add" %}</button>
+			</div>
+		</div>
+		<br>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				{{ form.group_description.label_tag }}
+			</div>
+			<div class="col-sm-8 valign-bottom">
+				{{ form.group_description }}
+			</div><!--
+		      --><div class="col-sm-1 valign-bottom">
+			      <a id="count_message"></a> {% trans "characters remaining" %}<br><br>
+			      <button type="submit" class="btn btn-default">{% trans "Update" %}</button>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+			</div>
+			<div class="col-sm-8">
+				{{ form.group_description.help_text }}
+			</div>
+			<div class="col-sm-1">
+			</div>
+		</div>
+		<br>
+		{% if view.authorized_to_leave %}
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				<strong>{% trans "Leave group" %}:</strong>
+			</div>
+			<div class="col-sm-8">
+				{% trans "you will leave the group and still own it!" %}
+			</div>
+			<div class="col-sm-1">
+				<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">
+					{% trans "Leave group..." %}
+				</a>
+			</div>
+		</div>
+		{% endif %}
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				<strong>{% trans "Delete group" %}:</strong>
+			</div>
+			<div class="col-sm-8">
+				{% trans "this will delete the group for everybody!" %}
+			</div>
+			<div class="col-sm-1">
+				<a href="{% url 'groups:delete' group.id %}" class="btn btn-default" role="button">
+					{% trans "Delete group..." %}
+				</a>
+			</div>
+		</div>
 	</form>
 	<br>
-	<hr>
-	<h3>{% trans "Currently set details" %}</h3>
-	<table class="table table-bordered">
-		<tr>
-			<th>{% trans "Name" %}:</th>
-			<td>{{ group.name }}</td>
-		</tr>
-		<tr>
-			<th>{% trans "Description" %}:</th>
-			<td>{{ group.description }}</td>
-		</tr>
-		<tr>
-			<th>{% trans "Displayed to this group" %}:</th>
-			<td>{{ group.displayed_to }}</td>
-		</tr>
-		<tr>
-			<th>{% trans "Owner(s)" %}:</th>
-			<td>{% for user in group.owners.all %}{{ user.username }}<br>{% endfor %}</td>
-		</tr>
-		<tr>
-			<th>{% trans "Member(s)" %}:</th>
-			<td>{% for user in group.members.all %}{{ user.username }}<br>{% endfor %}</td>
-		</tr>
-	</table>
-	<a href="{% url 'groups:delete' group.id %}" class="btn btn-default" role="button">{% trans "Delete group..." %}</a>
-	{% if view.authorized_to_leave %}
-		<a href="{% url 'groups:leave' group.id %}" class="btn btn-default" role="button">{% trans "Leave group..." %}</a>
-	{% endif %}
+	<br>
+	<br>
 {% else %}
 	<p>{% trans "You are not authorized to use this page." %}</p>
 {% endif %}

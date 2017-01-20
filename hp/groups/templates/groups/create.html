@@ -1,5 +1,10 @@
 {% extends "groups/base.html" %}
-{% load i18n %}
+{% load i18n staticfiles %}
+
+{% block extrajs %}
+{{ block.super }}
+<script src="{% static 'groups/js/counter.js' %}"></script>
+{% endblock extrajs %}
 
 {% block title %}{% trans "Create new group" %}{% endblock title %}
 
@@ -36,8 +41,18 @@
 			{% trans "The group description can be changed later on." %}
 		</div>
 		<div class="col-sm-9">
-			{{ form.group_description }}<br>
+			{{ form.group_description }}
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-3">
+		</div>
+		<div class="col-sm-4">
 			{{ form.group_description.help_text }}
+		</div>
+		<div class="col-sm-5 text-right">
+			{% trans "10 - 1000 characters" %}, <a id="count_message"></a> {% trans "characters remaining" %}.
 		</div>
 	</div>
 	<br>
