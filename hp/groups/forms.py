@@ -56,14 +56,29 @@ class EditGroupForm(GroupDescriptionForm):
         required = False,
     )
 
+    display = forms.CharField(
+        min_length = 3,
+        max_length = 1000,
+        label = _('Displayed to this group'),
+        help_text = _('Change which groups will be shown to this group. You must own all involved groups.'),
+        widget = BootstrapTextInput,
+        required = False,
+    )
+
     def clean_member_name(self):
         data = self.cleaned_data['member_name']
         if re.match('^.*\s.*$', data) or '@' in data:
             raise ValidationError(_('Invalid input - space and @ not allowed!'))
         return data
-    
+
     def clean_owner_name(self):
         data = self.cleaned_data['owner_name']
         if re.match('^.*\s.*$', data) or '@' in data:
             raise ValidationError(_('Invalid input - space and @ not allowed!'))
+        return data
+
+    def clean_display(self):
+        data = self.cleaned_data['display']
+        if len(data) > 0 and not re.match("^[ A-Za-z0-9.,_-]+$", data):
+            raise ValidationError(_('Invalid group name - special characters not allowed!'))
         return data

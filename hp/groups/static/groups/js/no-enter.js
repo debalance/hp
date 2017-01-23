@@ -12,3 +12,10 @@ $("#id_owner_name").keypress(
 		}
 	}
 );
+$("#id_display").keypress(
+	function(event){
+		if (event.which == '13') {
+			event.preventDefault();
+		}
+	}
+);

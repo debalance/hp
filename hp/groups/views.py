@@ -219,8 +219,6 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
         context['form'] = self.get_form()
         return context
 
-    #TODO: allow to edit displayed_groups if user owns them all
-
     def post(self, request, *args, **kwargs):
         user = self.request.user
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
@@ -309,6 +307,34 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                 if len(already_owner_string) > 0:
                     messages.info(self.request, _("The following users have already been owners of the group: %(owner)s")
                         % { 'owner': already_owner_string })
+
+        elif 'change_display' in self.request.POST:
+            display_string = form.cleaned_data.get('display')
+            if len(display_string) < 3:
+                messages.error(self.request, _("Invalid input in 'Displayed to this group' field: groupname too short!"))
+            else:
+                display_list = re.split(",", display_string)
+                valid_display_list = []
+                invalid_display_list = []
+                for display in display_list:
+                    try:
+                        display_object = Group.objects.get(name = display)
+                        if display_object in user.owner.all():
+                            valid_display_list.append(display_object.name)
+                        else:
+                            invalid_display_list.append(display_object.name)
+                    except Group.DoesNotExist:
+                            invalid_display_list.append(display)
+                valid_display_string = ", ".join(valid_display_list)
+                if len(valid_display_string) > 0:
+                    group.displayed_to = valid_display_string
+                    group.save()
+                    messages.success(self.request, _("The following groups are now displayed to this group: %(display)s")
+                        % { 'display': valid_display_string })
+                invalid_display_string = ", ".join(invalid_display_list)
+                if len(invalid_display_string) > 0:
+                    messages.error(self.request, _("The following groups do not exist or do not belong to you: %(display)s")
+                        % { 'display': invalid_display_string })
 
         elif 'update_description' in self.request.POST:
             group.description = form.cleaned_data.get('group_description')

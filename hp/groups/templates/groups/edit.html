@@ -50,7 +50,7 @@
 		<br>
 		<div class="row">
 			<div class="col-sm-3">
-				<strong>{% trans "Displayed to this group" %}:*</strong>
+				<strong>{% trans "Displayed to this group" %}:</strong>
 			</div>
 			<div class="col-sm-9">
 				<table class="table-hover table-condensed">
@@ -100,8 +100,6 @@
 		</div>
 		<br>
 		<br>
-		<p>* {% blocktrans %}Changing what other groups members of this group can see is disabled for privacy reasons.
-		If you require a more complex setup involving multiple groups please contact the Jabber team.{% endblocktrans %}</p>
 		<hr>
 		<h3>{% trans "New settings" %}</h3>
 		<br>
@@ -136,6 +134,22 @@
 			</div>
 			<div class="col-sm-1">
 				<button type="submit" class="btn btn-default" name="add_owner">{% trans "Add" %}</button>
+			</div>
+		</div>
+		<br>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				{{ form.display.label_tag }}<br>
+				{{ form.display.help_text }}
+			</div>
+			<div class="col-sm-8">
+				{{ form.display }}
+				{{ form.display.errors }}<br>
+				{% trans "Enter multiple group names separated by colons." %}
+			</div>
+			<div class="col-sm-1">
+				<button type="submit" class="btn btn-default" name="change_display">{% trans "Update" %}</button>
 			</div>
 		</div>
 		<br>
