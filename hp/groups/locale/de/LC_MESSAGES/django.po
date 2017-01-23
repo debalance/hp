@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-20 18:10+0100\n"
+"POT-Creation-Date: 2017-01-23 09:58+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -87,7 +87,7 @@ msgstr ""
 msgid "Show menu"
 msgstr "Menü"
 
-#: templates/groups/create.html:9 views.py:55
+#: templates/groups/create.html:9 views.py:56
 msgid "Create new group"
 msgstr "Neue Gruppe erstellen"
 
@@ -107,7 +107,7 @@ msgstr "Die Gruppenbeschreibung kann später noch verändert werden."
 msgid "10 - 1000 characters"
 msgstr "10 - 1000 Zeichen"
 
-#: templates/groups/create.html:55 templates/groups/edit.html:135
+#: templates/groups/create.html:55 templates/groups/edit.html:144
 msgid "characters remaining"
 msgstr "Zeichen verbleibend"
 
@@ -116,7 +116,7 @@ msgid "Create group"
 msgstr "Neue Gruppe erstellen"
 
 #: templates/groups/delete.html:6 templates/groups/delete.html:8
-#: templates/groups/edit.html:169
+#: templates/groups/edit.html:168
 msgid "Delete group"
 msgstr "Lösche Gruppe"
 
@@ -128,7 +128,7 @@ msgstr "Sind sie sicher, dass sie diese Gruppe endgültig löschen wollen?"
 msgid "Yes, delete this group!"
 msgstr "Ja, lösche diese Gruppe!"
 
-#: templates/groups/delete.html:20 templates/groups/edit.html:185
+#: templates/groups/delete.html:20 templates/groups/edit.html:184
 #: templates/groups/group.html:37 templates/groups/leave.html:20
 msgid "You are not authorized to use this page."
 msgstr "Sie sind nicht berechtigt diese Seite zu verwenden."
@@ -172,33 +172,33 @@ msgstr ""
 msgid "New settings"
 msgstr "Neue Einstellungen"
 
-#: templates/groups/edit.html:109 templates/groups/edit.html:122
+#: templates/groups/edit.html:115 templates/groups/edit.html:129
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: templates/groups/edit.html:136
+#: templates/groups/edit.html:145
 msgid "Update"
 msgstr "Aktualisieren"
 
-#: templates/groups/edit.html:154 templates/groups/leave.html:6
+#: templates/groups/edit.html:153 templates/groups/leave.html:6
 #: templates/groups/leave.html:8
 msgid "Leave group"
 msgstr "Verlasse Gruppe"
 
-#: templates/groups/edit.html:157
+#: templates/groups/edit.html:156
 msgid "you will leave the group and still own it!"
 msgstr "sie verlassen die Gruppe aber bleiben ihr Besitzer!"
 
-#: templates/groups/edit.html:161 templates/groups/group.html:43
+#: templates/groups/edit.html:160 templates/groups/group.html:43
 #: templates/groups/membership.html:22
 msgid "Leave group..."
 msgstr "Gruppe verlassen..."
 
-#: templates/groups/edit.html:172
+#: templates/groups/edit.html:171
 msgid "this will delete the group for everybody!"
 msgstr "dies löscht die Gruppe für alle Beteiligten!"
 
-#: templates/groups/edit.html:176
+#: templates/groups/edit.html:175
 msgid "Delete group..."
 msgstr "Gruppe löschen..."
 
@@ -226,7 +226,7 @@ msgstr "Ja, verlasse diese Gruppe!"
 msgid "You are currently not a member of any groups."
 msgstr "Sie sind derzeit nicht Mitglied irgendeiner Gruppe."
 
-#: templates/groups/membership.html:13 views.py:54
+#: templates/groups/membership.html:13 views.py:55
 msgid "My memberships"
 msgstr "Meine Mitgliedschaften"
 
@@ -277,37 +277,83 @@ msgstr "Sie können jederzeit eine neue Gruppe anlegen."
 msgid "You currently do not own any groups."
 msgstr "Sie besitzen aktuell keine Gruppe(n)."
 
-#: templates/groups/ownership.html:13 views.py:53
+#: templates/groups/ownership.html:13 views.py:54
 msgid "My groups"
 msgstr "Meine Gruppen"
 
-#: views.py:52
+#: views.py:53
 msgid "Overview"
 msgstr "Übersicht"
 
-#: views.py:196
+#: views.py:197
 #, python-format
 msgid "You have left the group '%(group)s'."
 msgstr "Sie haben die Gruppe '%(group)s' verlassen."
 
-#: views.py:198
+#: views.py:199
 msgid "You are not a member of this group so you cannot leave it!"
 msgstr ""
 "Sie sind kein Mitglied dieser Gruppe, also können sie die Gruppe auch nicht "
 "verlassen!"
 
-#: views.py:233
+#: views.py:234
 msgid "You are not an owner of this group so you cannot edit it!"
 msgstr ""
 "Sie sind nicht Besitzer dieser Gruppe, also können sie diese Gruppe auch "
 "nicht bearbeiten!"
 
-#: views.py:252
+#: views.py:243
+msgid "The group description has been updated!"
+msgstr "Die Gruppenbeschreibung wurde aktualisiert!"
+
+#: views.py:248
+msgid "Invalid input in 'Add members' field: username too short!"
+msgstr "Ungültige Eingabe im Feld 'Mitglieder hinzufügen': Benutzername zu kurz!"
+
+#: views.py:266
+#, python-format
+msgid "Invalid user in 'Add members' field: '%(user)s'"
+msgstr "Ungültiger Benutzer im Feld 'Mitglieder hinzufügen': '%(user)s'"
+
+#: views.py:269
+#, python-format
+msgid "The following members have been added to the group: %(member)s"
+msgstr "Die folgenden Mitglieder wurden zur Gruppe hinzugefügt: %(member)s"
+
+#: views.py:273
+#, python-format
+msgid "The following users have already been members of the group: %(member)s"
+msgstr "Die folgenden Benutzer waren bereits Mitglieder der Gruppe: %(member)s"
+
+#: views.py:279
+msgid "Invalid input in 'Add owners' field: username too short!"
+msgstr "Ungültige Eingabe im Feld 'Besitzer hinzufügen': Benutzername zu kurz!"
+
+#: views.py:297
+#, python-format
+msgid "Invalid user in 'Add owners' field: '%(user)s'"
+msgstr "Ungültiger Benutzer im Feld 'Besitzer hinzufügen': '%(user)s'"
+
+#: views.py:300
+#, python-format
+msgid "The following owners have been added to the group: %(owner)s"
+msgstr "Die folgenden Besitzer wurden zur Gruppe hinzugefügt: %(owner)s"
+
+#: views.py:304
+#, python-format
+msgid "The following users have already been owners of the group: %(owner)s"
+msgstr "Die folgenden Benutzer waren bereits Besitzer der Gruppe: %(owner)s"
+
+#: views.py:308
+msgid "Invalid POST action submitted!"
+msgstr "Ungültige POST Aktion übermittel!"
+
+#: views.py:323
 #, python-format
 msgid "The group '%(group)s' has been deleted."
 msgstr "Die Gruppe '%(group)s' wurde gelöscht."
 
-#: views.py:254
+#: views.py:325
 msgid "You are not an owner of this group so you cannot delete it!"
 msgstr ""
 "Sie sind nicht Besitzer dieser Gruppe, also können sie die Gruppe auch nicht "

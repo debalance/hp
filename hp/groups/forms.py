@@ -58,12 +58,12 @@ class EditGroupForm(GroupDescriptionForm):
 
     def clean_member_name(self):
         data = self.cleaned_data['member_name']
-        if re.match("[ @]", data):
+        if re.match('^.*\s.*$', data) or '@' in data:
             raise ValidationError(_('Invalid input - space and @ not allowed!'))
         return data
     
     def clean_owner_name(self):
         data = self.cleaned_data['owner_name']
-        if re.match("[ @]", data):
+        if re.match('^.*\s.*$', data) or '@' in data:
             raise ValidationError(_('Invalid input - space and @ not allowed!'))
         return data

@@ -1,5 +1,6 @@
 import logging
 log = logging.getLogger(__name__)
+import re
 
 from django import forms
 from django.conf import settings
@@ -216,10 +217,10 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
         return context
 
     #TODO: add delete function for members/owners
+    #TODO: block hitting first button with enter
     #TODO: allow to edit displayed_groups if user owns them all
 
     def post(self, request, *args, **kwargs):
-    #TODO: find out which butten was pressed and act accordingly
         user = self.request.user
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
         if group in user.owner.all():
@@ -234,8 +235,78 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
             return HttpResponseRedirect(reverse('groups:ownership'))
 
     def form_valid(self, form, group):
-        group.description = form.cleaned_data.get('group_description')
-        group.save()
+        user = self.request.user
+
+        if 'update_description' in self.request.POST:
+            group.description = form.cleaned_data.get('group_description')
+            group.save()
+            messages.success(self.request, _("The group description has been updated!") % { 'group': group.name })
+
+        elif 'add_member' in self.request.POST:
+            member_string = form.cleaned_data.get('member_name')
+            if len(member_string) < settings.MIN_USERNAME_LENGTH:
+                messages.error(self.request, _("Invalid input in 'Add members' field: username too short!"))
+            else:
+                member_list = re.split(",", member_string)
+                valid_member_list = []
+                already_member_list = []
+                for member in member_list:
+                    try:
+                        member_object = User.objects.get(username = '%s@jabber.rwth-aachen.de' % member)
+                        if membership.objects.filter(user=member_object.id,group=group.id).count() == 0:
+                            new_membership = membership(
+                                group = group,
+                                user = member_object,
+                            )
+                            new_membership.save()
+                            valid_member_list.append(member)
+                        else:
+                            already_member_list.append(member)
+                    except User.DoesNotExist:
+                        messages.error(self.request, _("Invalid user in 'Add members' field: '%(user)s'") % { 'user': member })
+                member_string = ", ".join(valid_member_list)
+                if len(member_string) > 0:
+                    messages.success(self.request, _("The following members have been added to the group: %(member)s")
+                        % { 'member': member_string })
+                already_member_string = ", ".join(already_member_list)
+                if len(already_member_string) > 0:
+                    messages.info(self.request, _("The following users have already been members of the group: %(member)s")
+                        % { 'member': already_member_string })
+
+        elif 'add_owner' in self.request.POST:
+            owner_string = form.cleaned_data.get('owner_name')
+            if len(owner_string) < settings.MIN_USERNAME_LENGTH:
+                messages.error(self.request, _("Invalid input in 'Add owners' field: username too short!"))
+            else:
+                owner_list = re.split(",", owner_string)
+                valid_owner_list = []
+                already_owner_list = []
+                for owner in owner_list:
+                    try:
+                        owner_object = User.objects.get(username = '%s@jabber.rwth-aachen.de' % owner)
+                        if ownership.objects.filter(user=owner_object.id,group=group.id).count() == 0:
+                            new_ownership = ownership(
+                                group = group,
+                                user = owner_object,
+                            )
+                            new_ownership.save()
+                            valid_owner_list.append(owner)
+                        else:
+                            already_owner_list.append(owner)
+                    except User.DoesNotExist:
+                        messages.error(self.request, _("Invalid user in 'Add owners' field: '%(user)s'") % { 'user': owner })
+                owner_string = ", ".join(valid_owner_list)
+                if len(owner_string) > 0:
+                    messages.success(self.request, _("The following owners have been added to the group: %(owner)s")
+                        % { 'owner': owner_string })
+                already_owner_string = ", ".join(already_owner_list)
+                if len(already_owner_string) > 0:
+                    messages.info(self.request, _("The following users have already been owners of the group: %(owner)s")
+                        % { 'owner': already_owner_string })
+
+        else:
+            messages.error(self.request, _("Invalid POST action submitted!"))
+
         return HttpResponseRedirect(reverse('groups:edit', args=(group.id,)))
 
 

@@ -97,16 +97,22 @@
 	<form action="" method="post">
 		{% csrf_token %}
 		<div class="row">
+			<div class="col-sm-3"></div>
+			<div class="col-sm-8">{{ form.non_field_errors }}</div>
+			<div class="col-sm-1"></div>
+		</div>
+		<div class="row">
 			<div class="col-sm-3">
 				{{ form.member_name.label_tag }}<br>
 				{{ form.owner_name.help_text }}
 			</div>
 			<div class="col-sm-8">
-				{{ form.member_name }}<br>
+				{{ form.member_name }}
+				{{ form.member_name.errors }}<br>
 				{{ form.member_name.help_text }}
 			</div>
 			<div class="col-sm-1">
-				<button type="submit" class="btn btn-default">{% trans "Add" %}</button>
+				<button type="submit" class="btn btn-default" name="add_member">{% trans "Add" %}</button>
 			</div>
 		</div>
 		<br>
@@ -117,9 +123,10 @@
 			</div>
 			<div class="col-sm-8">
 				{{ form.owner_name }}
+				{{ form.owner_name.errors }}
 			</div>
 			<div class="col-sm-1">
-				<button type="submit" class="btn btn-default">{% trans "Add" %}</button>
+				<button type="submit" class="btn btn-default" name="add_owner">{% trans "Add" %}</button>
 			</div>
 		</div>
 		<br>
@@ -131,10 +138,11 @@
 			</div>
 			<div class="col-sm-8 valign-bottom">
 				{{ form.group_description }}
+				{{ form.group_description.errors }}
 			</div><!--
 		      --><div class="col-sm-1 valign-bottom">
 			      <a id="count_message"></a> {% trans "characters remaining" %}<br><br>
-			      <button type="submit" class="btn btn-default">{% trans "Update" %}</button>
+			      <button type="submit" class="btn btn-default" name="update_description">{% trans "Update" %}</button>
 			</div>
 		</div>
 		<br>
