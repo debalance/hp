@@ -219,7 +219,6 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
         context['form'] = self.get_form()
         return context
 
-    #TODO: block hitting first button with enter
     #TODO: allow to edit displayed_groups if user owns them all
 
     def post(self, request, *args, **kwargs):
