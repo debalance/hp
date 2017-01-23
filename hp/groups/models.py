@@ -24,6 +24,7 @@ from account.models import User
 
 log = logging.getLogger(__name__)
 
+#TODO: add hooks to create/change/delete groups in ejabberd
 
 class Group(models.Model):
     name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name')             )

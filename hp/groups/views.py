@@ -1,6 +1,8 @@
 import logging
 log = logging.getLogger(__name__)
 import re
+import urllib
+from urllib.parse import urlencode
 
 from django import forms
 from django.conf import settings
@@ -42,6 +44,7 @@ from xmpp_backends.django import xmpp_backend
 from .forms import CreateGroupForm
 from .forms import EditGroupForm
 
+#TODO: add user activity logs
 
 #
 # context menu
@@ -216,7 +219,6 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
         context['form'] = self.get_form()
         return context
 
-    #TODO: add delete function for members/owners
     #TODO: block hitting first button with enter
     #TODO: allow to edit displayed_groups if user owns them all
 
@@ -237,10 +239,15 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
     def form_valid(self, form, group):
         user = self.request.user
 
-        if 'update_description' in self.request.POST:
-            group.description = form.cleaned_data.get('group_description')
-            group.save()
-            messages.success(self.request, _("The group description has been updated!") % { 'group': group.name })
+        if 'delete_owner' in self.request.POST:
+            owner_object = User.objects.get(username = self.request.POST["delete_owner"])
+            ownership.objects.get(user=owner_object.id,group=group.id).delete()
+            messages.success(self.request, _("Removed %(user)s as owner of this group.") % { 'user': owner_object.username })
+
+        elif 'delete_member' in self.request.POST:
+            member_object = User.objects.get(username = self.request.POST["delete_member"])
+            membership.objects.get(user=member_object.id,group=group.id).delete()
+            messages.success(self.request, _("Removed %(user)s as member of this group.") % { 'user': member_object.username })
 
         elif 'add_member' in self.request.POST:
             member_string = form.cleaned_data.get('member_name')
@@ -303,6 +310,11 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                 if len(already_owner_string) > 0:
                     messages.info(self.request, _("The following users have already been owners of the group: %(owner)s")
                         % { 'owner': already_owner_string })
+
+        elif 'update_description' in self.request.POST:
+            group.description = form.cleaned_data.get('group_description')
+            group.save()
+            messages.success(self.request, _("The group description has been updated!") % { 'group': group.name })
 
         else:
             messages.error(self.request, _("Invalid POST action submitted!"))

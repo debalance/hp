@@ -21,81 +21,89 @@
 
 {% block content %}
 {% if view.authorized_to_edit %}
-	<h3>{% trans "Current settings" %}</h3>
-	<br>
-	<div class="row">
-		<div class="col-sm-3">
-			<strong>{% trans "Name" %}:</strong>
-		</div>
-		<div class="col-sm-9">
-			<table class="table-hover table-condensed">
-				<tr><td>{{ group.name }}</td></tr>
-			</table>
-		</div>
-	</div>
-	<br>
-	<div class="row">
-		<div class="col-sm-3">
-			<strong>{% trans "Description" %}:</strong>
-		</div>
-		<div class="col-sm-9">
-			<table class="table-hover table-condensed">
-				<tr><td>{{ group.description }}</td></tr>
-			</table>
-		</div>
-	</div>
-	<br>
-	<div class="row">
-		<div class="col-sm-3">
-			<strong>{% trans "Displayed to this group" %}:*</strong>
-		</div>
-		<div class="col-sm-9">
-			<table class="table-hover table-condensed">
-				<tr><td>{{ group.displayed_to }}</td></tr>
-			</table>
-		</div>
-	</div>
-	<br>
-	<div class="row">
-		<div class="col-sm-3">
-			<strong>{% trans "Owner(s)" %}:</strong>
-		</div>
-		<div class="col-sm-9">
-			<table class="table-hover table-condensed">
-				{% for user in group.owners.all %}
-					<tr>
-						<td>{{ user.username }}</td>
-						<td class="delete">{% glyph "trash" %}</td>
-					</tr>
-				{% endfor %}
-			</table>
-		</div>
-	</div>
-	<br>
-	<div class="row">
-		<div class="col-sm-3">
-			<strong>{% trans "Member(s)" %}:</strong>
-		</div>
-		<div class="col-sm-9">
-			<table class="table-hover table-condensed">
-				{% for user in group.members.all %}
-					<tr>
-						<td>{{ user.username }}</td>
-						<td class="delete">{% glyph "trash" %}</td>
-					</tr>
-				{% endfor %}
-			</table>
-		</div>
-	</div>
-	<br>
-	<br>
-	<p>* {% blocktrans %}Changing what other groups members of this group can see is disabled for privacy reasons.
-	If you require a more complex setup involving multiple groups please contact the Jabber team.{% endblocktrans %}</p>
-	<hr>
-	<h3>{% trans "New settings" %}</h3>
-	<br>
 	<form action="" method="post">
 		{% csrf_token %}
+		<h3>{% trans "Current settings" %}</h3>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				<strong>{% trans "Name" %}:</strong>
+			</div>
+			<div class="col-sm-9">
+				<table class="table-hover table-condensed">
+					<tr><td>{{ group.name }}</td></tr>
+				</table>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				<strong>{% trans "Description" %}:</strong>
+			</div>
+			<div class="col-sm-9">
+				<table class="table-hover table-condensed">
+					<tr><td>{{ group.description }}</td></tr>
+				</table>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				<strong>{% trans "Displayed to this group" %}:*</strong>
+			</div>
+			<div class="col-sm-9">
+				<table class="table-hover table-condensed">
+					<tr><td>{{ group.displayed_to }}</td></tr>
+				</table>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				<strong>{% trans "Owner(s)" %}:</strong>
+			</div>
+			<div class="col-sm-9">
+				<table class="table-hover table-condensed">
+					{% for user in group.owners.all %}
+						<tr>
+							<td>{{ user.username }}</td>
+							<td>
+								<button class="btn-default btn-xs" type="submit" value="{{ user.username }}" name="delete_owner">
+									{% glyph "trash" %}
+								</button>
+							</td>
+						</tr>
+					{% endfor %}
+				</table>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-sm-3">
+				<strong>{% trans "Member(s)" %}:</strong>
+			</div>
+			<div class="col-sm-9">
+				<table class="table-hover table-condensed">
+					{% for user in group.members.all %}
+						<tr>
+							<td>{{ user.username }}</td>
+							<td>
+								<button class="btn-default btn-xs" type="submit" value="{{ user.username }}" name="delete_member">
+									{% glyph "trash" %}
+								</button>
+							</td>
+						</tr>
+					{% endfor %}
+				</table>
+			</div>
+		</div>
+		<br>
+		<br>
+		<p>* {% blocktrans %}Changing what other groups members of this group can see is disabled for privacy reasons.
+		If you require a more complex setup involving multiple groups please contact the Jabber team.{% endblocktrans %}</p>
+		<hr>
+		<h3>{% trans "New settings" %}</h3>
+		<br>
 		<div class="row">
 			<div class="col-sm-3"></div>
 			<div class="col-sm-8">{{ form.non_field_errors }}</div>
