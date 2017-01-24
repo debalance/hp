@@ -1,0 +1,23 @@
+{% extends "admin/change_list.html" %}
+{% load i18n bootstrap staticfiles %}
+
+{% block object-tools-items %}
+	<li>
+		<a title="{% trans "Use with care! This initiates a complete sync!" %}" href="{% url 'groups:sync' action='from' %}" class="changelink">
+			{% trans "Sync from XMPP" %}
+		</a>
+	</li>
+	<li>
+		<a title="{% trans "Use with care! This initiates a complete sync!" %}" href="{% url 'groups:sync' action='to' %}" class="changelink">
+			{% trans "Sync to XMPP" %}
+		</a>
+	</li>
+	<li>
+		&nbsp;
+	<li>
+	<li>
+		<a title="{% trans "Add a new group. This is safe to use." %}" href="{% url 'admin:groups_group_add' %}" class="addlink">
+			{% trans "Add Group" %}
+		</a>
+	</li>
+{% endblock %}

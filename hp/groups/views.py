@@ -13,6 +13,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
+from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
@@ -25,6 +26,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext_noop
 from django.views.generic import DetailView
 from django.views.generic import FormView
+from django.views.generic import View
 from django.views.generic.base import RedirectView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
@@ -361,3 +363,17 @@ class DeleteView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView)
         else:
             messages.error(self.request, _("You are not an owner of this group so you cannot delete it!"))
         return HttpResponseRedirect(reverse('groups:ownership'))
+
+
+def SyncView(request, action=None):
+    user = request.user
+    if not user.is_superuser:
+        raise Http404("The requested URL " + request.path + " was not found on this server.")
+    elif action == "to":
+        return HttpResponse("Sync to XMPP initiated by " + user.username)
+        #return HttpResponseRedirect(reverse('admin:groups_group_changelist'))
+    elif action == "from":
+        return HttpResponse("Sync from XMPP initiated by " + user.username)
+        #return HttpResponseRedirect(reverse('admin:groups_group_changelist'))
+    else:
+        raise Http404("The requested URL " + request.path + " was not found on this server.")
