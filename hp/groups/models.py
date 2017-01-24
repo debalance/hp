@@ -1,4 +1,5 @@
 import logging
+import re
 
 from contextlib import contextmanager
 
@@ -20,7 +21,10 @@ from django.utils.crypto import salted_hmac
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext_noop
 
+from xmpp_backends.django import xmpp_backend
+
 from account.models import User
+
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +44,20 @@ class Group(models.Model):
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse('groups:details', args=[str(self.id)])
+
+    def save(self, *args, **kwargs):
+        xmpp_backend.srg_create(groupname=self.name, domain='jabber.rwth-aachen.de', text=self.description, displayed=self.displayed_to)
+        super(Group, self).save(*args, **kwargs)
+
+    def save_native(self, *args, **kwargs):
+        super(Group, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        xmpp_backend.srg_delete(groupname=self.name, domain='jabber.rwth-aachen.de')
+        super(Group, self).delete(*args, **kwargs)
+
+    def delete_native(self, *args, **kwargs):
+        super(Group, self).delete(*args, **kwargs)
 
 
 class ownership(models.Model):
@@ -68,4 +86,22 @@ class membership(models.Model):
 
     def username(self):
         return self.user.username
+
+    def save(self, *args, **kwargs):
+        user = re.split('@', self.user.username)[0]
+        node = re.split('@', self.user.username)[1]
+        xmpp_backend.srg_user_add(username=user, domain=node, groupname=self.group.name)
+        super(membership, self).save(*args, **kwargs)
+
+    def save_native(self, *args, **kwargs):
+        super(membership, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        user = re.split('@', self.user.username)[0]
+        node = re.split('@', self.user.username)[1]
+        xmpp_backend.srg_user_del(username=user, domain=node, groupname=self.group.name)
+        super(membership, self).delete(*args, **kwargs)
+
+    def delete_native(self, *args, **kwargs):
+        super(membership, self).delete(*args, **kwargs)
 
