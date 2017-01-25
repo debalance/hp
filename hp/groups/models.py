@@ -9,10 +9,12 @@ from xmpp_backends.django import xmpp_backend
 
 
 class Group(models.Model):
-    name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name')             )
-    description  = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description')      )
+    name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name'),
+        help_text=_("We do not support changing the name of a group after creation!"))
+    description  = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description'),
+        help_text=_("\"Nothing is true, everything is permitted.\""))
     displayed_to = models.CharField(max_length=1023, unique=False, verbose_name=_('Displayed to this group'),
-        help_text=_('Multiple groups must be separated with line-breaks, i.e. one group per line!')         )
+        help_text=_("Multiple groups must be separated with line-breaks, i.e. one group per line!"))
 
     owners  = models.ManyToManyField(User,  through='ownership',  through_fields=('group', 'user'), related_name='owner'  )
     members = models.ManyToManyField(User,  through='membership', through_fields=('group', 'user'), related_name='member' )

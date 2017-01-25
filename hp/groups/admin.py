@@ -26,7 +26,8 @@ class GroupAdminForm(forms.ModelForm):
         model = Group
         fields = '__all__'
         widgets = {
-            'displayed_to': forms.Textarea
+            'displayed_to': forms.Textarea,
+            'description': forms.Textarea,
         }
 
 class GroupAdmin(admin.ModelAdmin):

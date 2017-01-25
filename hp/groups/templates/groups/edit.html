@@ -49,9 +49,8 @@
 				<strong>{% trans "Displayed to this group" %}:</strong>
 			</div>
 			<div class="col-sm-9">
-				{% trans "members of group(s)" %}:<br>
 				{% for entry in view.display_list %}
-					&nbsp;&nbsp;&nbsp;{{ entry }}<br>
+					{{ entry }}<br>
 				{% endfor %}
 			</div>
 		</div>

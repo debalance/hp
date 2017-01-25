@@ -23,9 +23,8 @@
 		<tr>
 			<th>{% trans "Displayed to this group" %}:</th>
 			<td>
-				{% trans "members of group(s)" %}:<br>
 				{% for entry in view.display_list %}
-				&nbsp;&nbsp;&nbsp;{{ entry }}<br>
+					{{ entry }}<br>
 				{% endfor %}
 			</td>
 		</tr>
