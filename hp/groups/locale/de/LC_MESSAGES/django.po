@@ -1,47 +1,51 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-25 17:01+0100\n"
+"POT-Creation-Date: 2017-01-25 18:16+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admin.py:50
+#: admin.py:42
 #, python-format
 msgid "The group '%(group)s' has been synced from Django to ejabberd."
 msgstr "Die Gruppe '%(group)s' wurde von Django nach ejabberd synchronisiert."
 
-#: admin.py:67
+#: admin.py:59
 #, python-format
 msgid "The group '%(group)s' has been synced from ejabberd to Django."
 msgstr "Die Gruppe '%(group)s' wurde von ejabberd nach Django synchronisiert."
 
-#: admin.py:73 views.py:365
+#: admin.py:65 views.py:365
 #, python-format
 msgid "The group '%(group)s' has been deleted."
 msgstr "Die Gruppe '%(group)s' wurde gelöscht."
 
-#: admin.py:75 templates/admin/groups/group/change_list.html:12
+#: admin.py:67 templates/admin/groups/group/change_list.html:12
 msgid "Sync to XMPP"
 msgstr "Sync nach XMPP"
 
-#: admin.py:76 templates/admin/groups/group/change_list.html:7
+#: admin.py:68 templates/admin/groups/group/change_list.html:7
 msgid "Sync from XMPP"
 msgstr "Sync von XMPP"
 
-#: admin.py:77
+#: admin.py:69 admin.py:92
 msgid "Delete"
 msgstr "Löschen"
 
-#: forms.py:16 models.py:14
+#: admin.py:90
+msgid "The object '%(object)s' has been deleted."
+msgstr "Das Objekt '%(object)s' wurde gelöscht."
+
+#: forms.py:16 models.py:18
 msgid "Group description"
 msgstr "Gruppenbeschreibung"
 
-#: forms.py:17 models.py:15
+#: forms.py:17 models.py:19
 msgid "\"Nothing is true, everything is permitted.\""
 msgstr "\"Nichts ist wahr, alles ist erlaubt.\""
 
-#: forms.py:26 models.py:12
+#: forms.py:26 models.py:16 models.py:53 models.py:74
 msgid "Group name"
 msgstr "Gruppenname"
 
@@ -81,7 +85,7 @@ msgstr "Besitzer hinzufügen"
 msgid "Do not add users to a group without their consent!"
 msgstr "Fügen sie keine Mitglieder ohne deren Zustimmung hinzu!"
 
-#: forms.py:62 models.py:16 templates/groups/edit.html:49
+#: forms.py:62 models.py:20 templates/groups/edit.html:49
 #: templates/groups/group.html:24
 msgid "Displayed to this group"
 msgstr "Dieser Gruppe angezeigt"
@@ -99,17 +103,45 @@ msgid "Invalid input - space and @ not allowed!"
 msgstr "Ungültige Eingabe - Leerzeichen und @ sind nicht erlaubt!"
 
 #: models.py:13
+msgid "Group"
+msgstr "Gruppe"
+
+#: models.py:14
+msgid "Groups"
+msgstr "Gruppen"
+
+#: models.py:17
 msgid "We do not support changing the name of a group after creation!"
 msgstr ""
 "Wir unterstützen es nicht, den Gruppennamen nach der Erstellung noch zu "
 "ändern!"
 
-#: models.py:17
+#: models.py:21
 msgid ""
 "Multiple groups must be separated with line-breaks, i.e. one group per line!"
 msgstr ""
 "Mehrere Gruppen müssen durch Zeilenumbrüche getrennt werden, d.h. eine "
 "Gruppe pro Zeile!"
+
+#: models.py:50
+msgid "Ownership"
+msgstr "Eigentümerschaft"
+
+#: models.py:51
+msgid "Ownerships"
+msgstr "Eigentümerschaften"
+
+#: models.py:54 models.py:75
+msgid "User name"
+msgstr "Nutzername"
+
+#: models.py:71
+msgid "Membership"
+msgstr "Mitgliedschaft"
+
+#: models.py:72
+msgid "Memberships"
+msgstr "Mitgliedschaften"
 
 #: templates/admin/groups/group/change_form.html:7
 msgid "View on site"
@@ -441,6 +473,8 @@ msgid ""
 "Sync from Django to XMPP completed! Exported %(group)s groups and %(member)s "
 "memberships to ejabberd."
 msgstr ""
+"Synchronisation von Django zu XMPP abgeschlossen! Es wurden %(group)s "
+"Gruppen und %(member)s Mitgliedschaften zu ejabberd exportiert."
 
 #: views.py:420
 #, python-format
@@ -458,4 +492,3 @@ msgid ""
 msgstr ""
 "Synchronisation von XMPP zu Django abgeschlossen! Es wurden %(group)s "
 "Gruppen und %(member)s Mitgliedschaften von ejabberd importiert."
-

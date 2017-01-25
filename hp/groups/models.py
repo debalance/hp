@@ -9,6 +9,10 @@ from xmpp_backends.django import xmpp_backend
 
 
 class Group(models.Model):
+    class Meta:
+        verbose_name = _('Group')
+        verbose_name_plural = _('Groups')
+
     name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name'),
         help_text=_("We do not support changing the name of a group after creation!"))
     description  = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description'),
@@ -42,8 +46,12 @@ class Group(models.Model):
 
 
 class ownership(models.Model):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    user  = models.ForeignKey(User,  on_delete=models.CASCADE)
+    class Meta:
+        verbose_name = _('Ownership')
+        verbose_name_plural = _('Ownerships')
+
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_('Group name'))
+    user  = models.ForeignKey(User,  on_delete=models.CASCADE, verbose_name=_('User name'))
 
     def __str__(self):
         return self.group.name + ": " + self.user.username
@@ -53,11 +61,18 @@ class ownership(models.Model):
 
     def username(self):
         return self.user.username
+
+    groupname.admin_order_field = 'group'
+    username.admin_order_field = 'user'
 
 
 class membership(models.Model):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    user  = models.ForeignKey(User,  on_delete=models.CASCADE)
+    class Meta:
+        verbose_name = _('Membership')
+        verbose_name_plural = _('Memberships')
+
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_('Group name'))
+    user  = models.ForeignKey(User,  on_delete=models.CASCADE, verbose_name=_('User name'))
 
     def __str__(self):
         return self.group.name + ": " + self.user.username
@@ -67,6 +82,9 @@ class membership(models.Model):
 
     def username(self):
         return self.user.username
+
+    groupname.admin_order_field = 'group'
+    username.admin_order_field = 'user'
 
     def save(self, *args, **kwargs):
         user = re.split('@', self.user.username)[0]

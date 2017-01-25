@@ -105,6 +105,8 @@ class GroupAuthMixin():
 
     def authorized_to_edit(self):
         user = self.request.user
+        if user.is_superuser:
+            return True
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
         if group in user.owner.all():
             return True
@@ -113,6 +115,8 @@ class GroupAuthMixin():
 
     def authorized_to_leave(self):
         user = self.request.user
+        if user.is_superuser:
+            return True
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
         if group in user.member.all():
             return True
@@ -121,6 +125,8 @@ class GroupAuthMixin():
 
     def authorized(self):
         user = self.request.user
+        if user.is_superuser:
+            return True
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
         if group in user.owner.all():
             return True
@@ -227,7 +233,7 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
     def post(self, request, *args, **kwargs):
         user = self.request.user
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
-        if group in user.owner.all():
+        if group in user.owner.all() or user.is_superuser:
             self.object = self.get_object()
             form = self.get_form()
             if form.is_valid():
@@ -324,7 +330,7 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                 for display in display_list:
                     try:
                         display_object = Group.objects.get(name = display)
-                        if display_object in user.owner.all():
+                        if display_object in user.owner.all() or user.is_superuser:
                             valid_display_list.append(display_object.name)
                         else:
                             invalid_display_list.append(display_object.name)

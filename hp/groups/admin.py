@@ -12,14 +12,7 @@ from .models import Group
 from .models import membership
 from .models import ownership
 
-
-class membershipInLine(admin.StackedInline):
-    model = membership
-    extra = 10
-
-class ownershipInLine(admin.StackedInline):
-    model = ownership
-    extra = 2
+admin.site.disable_action('delete_selected')
 
 class GroupAdminForm(forms.ModelForm):
     class Meta:
@@ -34,7 +27,6 @@ class GroupAdmin(admin.ModelAdmin):
     form = GroupAdminForm
     list_display = ('name', 'description', 'id')
     fields = ('name', 'description', 'displayed_to')
-    inlines = [membershipInLine, ownershipInLine]
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -80,6 +72,29 @@ class GroupAdmin(admin.ModelAdmin):
     actions_on_bottom = True
 
     actions = [sync_to_XMPP, sync_from_XMPP, delete]
-
+    
 admin.site.register(Group, GroupAdmin)
-admin.site.disable_action('delete_selected')
+
+class ShipAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'groupname', 'username')
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields + ('group', 'user')
+        return self.readonly_fields
+
+    def delete(modeladmin, request, queryset):
+        for obj in queryset:
+            objname = obj.__str__
+            obj.delete()
+            messages.success(request, _("The object '%(object)s' has been deleted.") % { 'object': obj })
+
+    delete.short_description = _("Delete")
+
+    actions_on_top = True
+    actions_on_bottom = True
+
+    actions = [delete]
+
+admin.site.register(membership, ShipAdmin)
+admin.site.register(ownership, ShipAdmin)
