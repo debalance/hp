@@ -1,12 +1,37 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-24 20:10+0100\n"
+"POT-Creation-Date: 2017-01-25 16:19+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: forms.py:16 models.py:33
+#: admin.py:49
+msgid "The group '%(group)s' has been synced from Django to ejabberd."
+msgstr "Die Gruppe '%(group)s' wurde von Django nach ejabberd synchronisiert."
+
+#: admin.py:66
+msgid "The group '%(group)s' has been synced from ejabberd to Django."
+msgstr "Die Gruppe '%(group)s' wurde von ejabberd nach Django synchronisiert."
+
+#: admin.py:72 views.py:365
+#, python-format
+msgid "The group '%(group)s' has been deleted."
+msgstr "Die Gruppe '%(group)s' wurde gelöscht."
+
+#: admin.py:74 templates/admin/groups/group/change_list.html:12
+msgid "Sync to XMPP"
+msgstr "Sync nach XMPP"
+
+#: admin.py:75 templates/admin/groups/group/change_list.html:7
+msgid "Sync from XMPP"
+msgstr "Sync von XMPP"
+
+#: admin.py:76
+msgid "Delete"
+msgstr "Löschen"
+
+#: forms.py:16 models.py:13
 msgid "Group description"
 msgstr "Gruppenbeschreibung"
 
@@ -14,7 +39,7 @@ msgstr "Gruppenbeschreibung"
 msgid "\"Nothing is true, everything is permitted.\""
 msgstr "\"Nichts ist wahr, alles ist erlaubt.\""
 
-#: forms.py:26 models.py:32
+#: forms.py:26 models.py:12
 msgid "Group name"
 msgstr "Gruppenname"
 
@@ -54,7 +79,7 @@ msgstr "Besitzer hinzufügen"
 msgid "Do not add users to a group without their consent!"
 msgstr "Fügen sie keine Mitglieder ohne deren Zustimmung hinzu!"
 
-#: forms.py:62 models.py:34 templates/groups/edit.html:53
+#: forms.py:62 models.py:14 templates/groups/edit.html:49
 #: templates/groups/group.html:24
 msgid "Displayed to this group"
 msgstr "Dieser Gruppe angezeigt"
@@ -71,18 +96,17 @@ msgstr ""
 msgid "Invalid input - space and @ not allowed!"
 msgstr "Ungültige Eingabe - Leerzeichen und @ sind nicht erlaubt!"
 
+#: models.py:15
+msgid ""
+"Multiple groups must be separated with line-breaks, i.e. one group per line!"
+msgstr ""
+"Mehrere Gruppen müssen durch Zeilenumbrüche getrennt werden, d.h. eine "
+"Gruppe pro Zeile!"
+
 #: templates/admin/groups/group/change_list.html:6
 #: templates/admin/groups/group/change_list.html:11
 msgid "Use with care! This initiates a complete sync!"
 msgstr "Mit Vorsicht benutzen! Löst einen kompletten Sync aus!"
-
-#: templates/admin/groups/group/change_list.html:7
-msgid "Sync from XMPP"
-msgstr "Sync von XMPP"
-
-#: templates/admin/groups/group/change_list.html:12
-msgid "Sync to XMPP"
-msgstr "Sync nach XMPP"
 
 #: templates/admin/groups/group/change_list.html:19
 msgid "Add a new group. This is safe to use."
@@ -117,7 +141,7 @@ msgstr ""
 msgid "Show menu"
 msgstr "Menü"
 
-#: templates/groups/create.html:9 views.py:61
+#: templates/groups/create.html:9 views.py:54
 msgid "Create new group"
 msgstr "Neue Gruppe erstellen"
 
@@ -137,7 +161,7 @@ msgstr "Die Gruppenbeschreibung kann später noch verändert werden."
 msgid "10 - 1000 characters"
 msgstr "10 - 1000 Zeichen"
 
-#: templates/groups/create.html:55 templates/groups/edit.html:167
+#: templates/groups/create.html:55 templates/groups/edit.html:164
 msgid "characters remaining"
 msgstr "Zeichen verbleibend"
 
@@ -146,7 +170,7 @@ msgid "Create group"
 msgstr "Neue Gruppe erstellen"
 
 #: templates/groups/delete.html:6 templates/groups/delete.html:8
-#: templates/groups/edit.html:191
+#: templates/groups/edit.html:188
 msgid "Delete group"
 msgstr "Lösche Gruppe"
 
@@ -158,8 +182,8 @@ msgstr "Sind sie sicher, dass sie diese Gruppe endgültig löschen wollen?"
 msgid "Yes, delete this group!"
 msgstr "Ja, lösche diese Gruppe!"
 
-#: templates/groups/delete.html:20 templates/groups/edit.html:207
-#: templates/groups/group.html:37 templates/groups/leave.html:20
+#: templates/groups/delete.html:20 templates/groups/edit.html:204
+#: templates/groups/group.html:42 templates/groups/leave.html:20
 msgid "You are not authorized to use this page."
 msgstr "Sie sind nicht berechtigt diese Seite zu verwenden."
 
@@ -175,53 +199,57 @@ msgstr "Aktuelle Einstellungen"
 msgid "Name"
 msgstr "Name"
 
-#: templates/groups/edit.html:42 templates/groups/group.html:20
+#: templates/groups/edit.html:40 templates/groups/group.html:20
 msgid "Description"
 msgstr "Beschreibung"
 
-#: templates/groups/edit.html:64 templates/groups/group.html:28
+#: templates/groups/edit.html:52 templates/groups/group.html:26
+msgid "members of group(s)"
+msgstr "Mitglieder der Gruppe(n)"
+
+#: templates/groups/edit.html:61 templates/groups/group.html:33
 msgid "Owner(s)"
 msgstr "Besitzer"
 
-#: templates/groups/edit.html:84 templates/groups/group.html:32
+#: templates/groups/edit.html:81 templates/groups/group.html:37
 msgid "Member(s)"
 msgstr "Mitglieder"
 
-#: templates/groups/edit.html:104
+#: templates/groups/edit.html:101
 msgid "New settings"
 msgstr "Neue Einstellungen"
 
-#: templates/groups/edit.html:122 templates/groups/edit.html:136
+#: templates/groups/edit.html:119 templates/groups/edit.html:133
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: templates/groups/edit.html:149
+#: templates/groups/edit.html:146
 msgid "Enter multiple group names separated by colons."
 msgstr "Geben Sie mehrere Gruppennamen durch Kommas getrennt an."
 
-#: templates/groups/edit.html:152 templates/groups/edit.html:168
+#: templates/groups/edit.html:149 templates/groups/edit.html:165
 msgid "Update"
 msgstr "Aktualisieren"
 
-#: templates/groups/edit.html:176 templates/groups/leave.html:6
+#: templates/groups/edit.html:173 templates/groups/leave.html:6
 #: templates/groups/leave.html:8
 msgid "Leave group"
 msgstr "Verlasse Gruppe"
 
-#: templates/groups/edit.html:179
+#: templates/groups/edit.html:176
 msgid "you will leave the group and still own it!"
 msgstr "sie verlassen die Gruppe aber bleiben ihr Besitzer!"
 
-#: templates/groups/edit.html:183 templates/groups/group.html:43
+#: templates/groups/edit.html:180 templates/groups/group.html:48
 #: templates/groups/membership.html:22
 msgid "Leave group..."
 msgstr "Gruppe verlassen..."
 
-#: templates/groups/edit.html:194
+#: templates/groups/edit.html:191
 msgid "this will delete the group for everybody!"
 msgstr "dies löscht die Gruppe für alle Beteiligten!"
 
-#: templates/groups/edit.html:198
+#: templates/groups/edit.html:195
 msgid "Delete group..."
 msgstr "Gruppe löschen..."
 
@@ -229,11 +257,7 @@ msgstr "Gruppe löschen..."
 msgid "Details of group"
 msgstr "Details der Gruppe"
 
-#: templates/groups/group.html:25
-msgid "members of group(s)"
-msgstr "Mitglieder der Gruppe(n)"
-
-#: templates/groups/group.html:40 templates/groups/ownership.html:22
+#: templates/groups/group.html:45 templates/groups/ownership.html:22
 msgid "Edit group..."
 msgstr "Gruppe bearbeiten..."
 
@@ -249,7 +273,7 @@ msgstr "Ja, verlasse diese Gruppe!"
 msgid "You are currently not a member of any groups."
 msgstr "Sie sind derzeit nicht Mitglied irgendeiner Gruppe."
 
-#: templates/groups/membership.html:13 views.py:60
+#: templates/groups/membership.html:13 views.py:53
 msgid "My memberships"
 msgstr "Meine Mitgliedschaften"
 
@@ -300,110 +324,129 @@ msgstr "Sie können jederzeit eine neue Gruppe anlegen."
 msgid "You currently do not own any groups."
 msgstr "Sie besitzen aktuell keine Gruppe(n)."
 
-#: templates/groups/ownership.html:13 views.py:59
+#: templates/groups/ownership.html:13 views.py:52
 msgid "My groups"
 msgstr "Meine Gruppen"
 
-#: views.py:58
+#: views.py:51
 msgid "Overview"
 msgstr "Übersicht"
 
-#: views.py:202
+#: views.py:200
 #, python-format
 msgid "You have left the group '%(group)s'."
 msgstr "Sie haben die Gruppe '%(group)s' verlassen."
 
-#: views.py:204
+#: views.py:202
 msgid "You are not a member of this group so you cannot leave it!"
 msgstr ""
 "Sie sind kein Mitglied dieser Gruppe, also können sie die Gruppe auch nicht "
 "verlassen!"
 
-#: views.py:235
+#: views.py:238
 msgid "You are not an owner of this group so you cannot edit it!"
 msgstr ""
 "Sie sind nicht Besitzer dieser Gruppe, also können sie diese Gruppe auch "
 "nicht bearbeiten!"
 
-#: views.py:244
+#: views.py:247
 #, python-format
 msgid "Removed %(user)s as owner of this group."
 msgstr "%(user)s wurde als Besitzer dieser Gruppe entfernt."
 
-#: views.py:249
+#: views.py:252
 #, python-format
 msgid "Removed %(user)s as member of this group."
 msgstr "%(user)s wurde als Mitglied dieser Gruppe entfernt."
 
-#: views.py:254
+#: views.py:257
 msgid "Invalid input in 'Add members' field: username too short!"
 msgstr ""
 "Ungültige Eingabe im Feld 'Mitglieder hinzufügen': Benutzername zu kurz!"
 
-#: views.py:272
+#: views.py:275
 #, python-format
 msgid "Invalid user in 'Add members' field: '%(user)s'"
 msgstr "Ungültiger Benutzer im Feld 'Mitglieder hinzufügen': '%(user)s'"
 
-#: views.py:275
+#: views.py:278
 #, python-format
 msgid "The following members have been added to the group: %(member)s"
 msgstr "Die folgenden Mitglieder wurden zur Gruppe hinzugefügt: %(member)s"
 
-#: views.py:279
+#: views.py:282
 #, python-format
 msgid "The following users have already been members of the group: %(member)s"
 msgstr "Die folgenden Benutzer waren bereits Mitglieder der Gruppe: %(member)s"
 
-#: views.py:285
+#: views.py:288
 msgid "Invalid input in 'Add owners' field: username too short!"
 msgstr "Ungültige Eingabe im Feld 'Besitzer hinzufügen': Benutzername zu kurz!"
 
-#: views.py:303
+#: views.py:306
 #, python-format
 msgid "Invalid user in 'Add owners' field: '%(user)s'"
 msgstr "Ungültiger Benutzer im Feld 'Besitzer hinzufügen': '%(user)s'"
 
-#: views.py:306
+#: views.py:309
 #, python-format
 msgid "The following owners have been added to the group: %(owner)s"
 msgstr "Die folgenden Besitzer wurden zur Gruppe hinzugefügt: %(owner)s"
 
-#: views.py:310
+#: views.py:313
 #, python-format
 msgid "The following users have already been owners of the group: %(owner)s"
 msgstr "Die folgenden Benutzer waren bereits Besitzer der Gruppe: %(owner)s"
 
-#: views.py:316
+#: views.py:319
 msgid "Invalid input in 'Displayed to this group' field: groupname too short!"
 msgstr ""
 "Ungültige Eingabe im Feld 'Dieser Gruppe angezeigt': Gruppenname zu kurz!"
 
-#: views.py:334
+#: views.py:337
 #, python-format
 msgid "The following groups are now displayed to this group: %(display)s"
 msgstr "Die folgenden Gruppen werden dieser Gruppe nun angezeigt: %(display)s"
 
-#: views.py:338
+#: views.py:341
 #, python-format
 msgid "The following groups do not exist or do not belong to you: %(display)s"
 msgstr "Diese Gruppen existieren nicht oder gehören ihnen nicht: %(display)s"
 
-#: views.py:344
+#: views.py:347
 msgid "The group description has been updated!"
 msgstr "Die Gruppenbeschreibung wurde aktualisiert!"
 
-#: views.py:347
+#: views.py:350
 msgid "Invalid POST action submitted!"
 msgstr "Ungültige POST Aktion übermittelt!"
 
-#: views.py:362
-#, python-format
-msgid "The group '%(group)s' has been deleted."
-msgstr "Die Gruppe '%(group)s' wurde gelöscht."
-
-#: views.py:364
+#: views.py:367
 msgid "You are not an owner of this group so you cannot delete it!"
 msgstr ""
 "Sie sind nicht Besitzer dieser Gruppe, also können sie die Gruppe auch nicht "
 "löschen!"
+
+#: views.py:385
+#, python-format
+msgid ""
+"Sync from Django to XMPP completed! Exported %(group)s groups and %(member)s "
+"memberships to ejabberd."
+msgstr ""
+
+#: views.py:420
+#, python-format
+msgid ""
+"There was a BackendError when trying to get members of group '%(group)s' !"
+msgstr ""
+"Es ist ein BackendError aufgetreten beim Abrufen der Mitglieder von Gruppe "
+"'%(group)s' !"
+
+#: views.py:421
+#, python-format
+msgid ""
+"Sync from XMPP to Django completed! Imported %(group)s groups and %(member)s "
+"memberships from ejabberd."
+msgstr ""
+"Synchronisation von XMPP zu Django abgeschlossen! Es wurden %(group)s Gruppen "
+"und %(member)s Mitgliedschaften von ejabberd importiert."

@@ -1,18 +1,7 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-01-08 17:40+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
-"MIME-Version: 1.0\n"
+"POT-Creation-Date: 2017-01-25 09:27+0100\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -452,6 +441,10 @@ msgstr ""
 "Das liegt vermutlich daran, dass sie einen offenen Proxy-Server nutzen oder "
 "ihr Computer eine Menge SPAM verschickt.\n"
 
+#: templates/core/errors/xmpp_backend.html:4
+msgid "Jabber server unavailable"
+msgstr "Jabber-Server nicht erreichbar"
+
 #: templates/core/errors/xmpp_backend.html:7
 msgid ""
 "<strong>Error:</strong> The Jabber server itself is currently unavailable.\n"
@@ -461,25 +454,12 @@ msgstr ""
 "Bitte versuchen sie es später erneut!"
 
 #: templates/core/errors/xmpp_backend.html:11
-#, python-format
-msgid ""
-"Our <a href=\"https://twitter.com/%(TWITTER_HANDLE)s\">Twitter page</a>\n"
-"usually is the first place were we inform users of minor outages and what\n"
-"we are doing to fix the problem. So please check there to see if we are\n"
-"already working on the problem."
-msgstr ""
-"Auf unserer <a href=\"https://twitter.com/%(TWITTER_HANDLE)s\">Twitter "
-"Seite</a>erfahren sie normalerweise am schnellsten, was bei uns nicht stimmt "
-"und ob wir bereits an der Behebung des Problems arbeiten."
-
-#: templates/core/errors/xmpp_backend.html:16
-#, python-format
 msgid ""
 "Please <a href=\"%(contact_url)s\">contact us</a> if the problem persists\n"
-"and nothing is mentioned on our Twitter page."
+"and nothing is mentioned in our news feed."
 msgstr ""
 "Bitte <a href=\"%(contact_url)s\">kontaktieren</a> sie uns, falls das "
-"Problem länger besteht."
+"Problem länger besteht und in unseren News Feed nichts dazu steht."
 
 #: templates/core/include/sidebar.html:5
 msgid "Language"
@@ -493,6 +473,10 @@ msgstr "Aktualisierungen"
 msgid "If you use our server, we strongly encourage you to stay up to date."
 msgstr ""
 "Wir raten allen, die unseren Server nutzen, auf dem Laufenden zu bleiben."
+
+#: templates/core/include/sidebar.html:37
+msgid "More from RWTH Aachen University"
+msgstr "Mehr von RWTH Aachen University"
 
 #: templates/core/include/twitter_follow.html:4
 #, python-format
@@ -600,10 +584,5 @@ msgstr ""
 msgid "No %(verbose_name)s found matching the query"
 msgstr "Kein %(verbose_name)s unter dieser Adresse gefunden."
 
-#: templates/core/blogpost_list.html:28
 msgid "Central XMPP/Jabber-Server at RWTH Aachen University"
 msgstr "Zentraler XMPP/Jabber-Server der RWTH Aachen University"
-
-#: templates/core/include/sidebar.html:35
-msgid "More from RWTH Aachen University"
-msgstr "Mehr von RWTH Aachen University"

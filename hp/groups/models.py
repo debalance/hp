@@ -1,37 +1,18 @@
-import logging
 import re
 
-from contextlib import contextmanager
-
-from django.conf import settings
-from django.contrib.auth.models import PermissionsMixin
-from django.contrib.messages import constants as messages
-from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.template import Context
-from django.template import Template
-from django.template.loader import render_to_string
-from django.utils import timezone
-from django.utils import translation
-from django.utils.crypto import get_random_string
-from django.utils.crypto import salted_hmac
 from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import ugettext_noop
-
-from xmpp_backends.django import xmpp_backend
 
 from account.models import User
+from xmpp_backends.django import xmpp_backend
 
-
-log = logging.getLogger(__name__)
 
 class Group(models.Model):
     name         = models.CharField(max_length=255,  unique=True,  verbose_name=_('Group name')             )
     description  = models.CharField(max_length=1023, unique=False, verbose_name=_('Group description')      )
-    displayed_to = models.CharField(max_length=1023, unique=False, verbose_name=_('Displayed to this group'))
+    displayed_to = models.CharField(max_length=1023, unique=False, verbose_name=_('Displayed to this group'),
+        help_text=_('Multiple groups must be separated with line-breaks, i.e. one group per line!')         )
 
     owners  = models.ManyToManyField(User,  through='ownership',  through_fields=('group', 'user'), related_name='owner'  )
     members = models.ManyToManyField(User,  through='membership', through_fields=('group', 'user'), related_name='member' )

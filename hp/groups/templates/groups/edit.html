@@ -31,9 +31,7 @@
 				<strong>{% trans "Name" %}:</strong>
 			</div>
 			<div class="col-sm-9">
-				<table class="table-hover table-condensed">
-					<tr><td>{{ group.name }}</td></tr>
-				</table>
+				{{ group.name }}
 			</div>
 		</div>
 		<br>
@@ -42,9 +40,7 @@
 				<strong>{% trans "Description" %}:</strong>
 			</div>
 			<div class="col-sm-9">
-				<table class="table-hover table-condensed">
-					<tr><td>{{ group.description }}</td></tr>
-				</table>
+				{{ group.description }}
 			</div>
 		</div>
 		<br>
@@ -53,9 +49,10 @@
 				<strong>{% trans "Displayed to this group" %}:</strong>
 			</div>
 			<div class="col-sm-9">
-				<table class="table-hover table-condensed">
-					<tr><td>{{ group.displayed_to }}</td></tr>
-				</table>
+				{% trans "members of group(s)" %}:<br>
+				{% for entry in view.display_list %}
+					&nbsp;&nbsp;&nbsp;{{ entry }}<br>
+				{% endfor %}
 			</div>
 		</div>
 		<br>
@@ -64,7 +61,7 @@
 				<strong>{% trans "Owner(s)" %}:</strong>
 			</div>
 			<div class="col-sm-9">
-				<table class="table-hover table-condensed">
+				<table class="hoverTable">
 					{% for user in group.owners.all %}
 						<tr>
 							<td>{{ user.username }}</td>
@@ -84,7 +81,7 @@
 				<strong>{% trans "Member(s)" %}:</strong>
 			</div>
 			<div class="col-sm-9">
-				<table class="table-hover table-condensed">
+				<table class="hoverTable">
 					{% for user in group.members.all %}
 						<tr>
 							<td>{{ user.username }}</td>

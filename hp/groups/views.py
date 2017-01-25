@@ -1,8 +1,6 @@
 import logging
 log = logging.getLogger(__name__)
 import re
-import urllib
-from urllib.parse import urlencode
 
 from django import forms
 from django.conf import settings
@@ -15,36 +13,31 @@ from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django.http import Http404
 from django.http import HttpResponse
-from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
-from django.utils import timezone
-from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import ugettext_noop
 from django.views.generic import DetailView
 from django.views.generic import FormView
-from django.views.generic import View
-from django.views.generic.base import RedirectView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import FormMixin
 from django.views.generic.edit import UpdateView
 
-from .models import Group
-from .models import membership
-from .models import ownership
 from account.models import User
 from account.models import Confirmation
 from account.views import UserObjectMixin
 from core.views import StaticContextMixin
+from xmpp_backends.base import BackendError
 from xmpp_backends.django import xmpp_backend
 
 from .forms import CreateGroupForm
 from .forms import EditGroupForm
+
+from .models import Group
+from .models import membership
+from .models import ownership
 
 #TODO: add user activity logs
 
@@ -189,6 +182,11 @@ class GroupView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
     model = Group
     template_name = 'groups/group.html'
 
+    def display_list(self):
+        group = get_object_or_404(Group, pk=self.kwargs['pk'])
+        dlist = re.split("\n", group.displayed_to)
+        return dlist
+
 
 class LeaveView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
     model = Group
@@ -220,6 +218,11 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
         context = super(EditView, self).get_context_data(**kwargs)
         context['form'] = self.get_form()
         return context
+
+    def display_list(self):
+        group = get_object_or_404(Group, pk=self.kwargs['pk'])
+        dlist = re.split("\n", group.displayed_to)
+        return dlist
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
@@ -329,7 +332,7 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                             invalid_display_list.append(display)
                 valid_display_string = ", ".join(valid_display_list)
                 if len(valid_display_string) > 0:
-                    group.displayed_to = valid_display_string
+                    group.displayed_to = "\n".join(valid_display_list)
                     group.save()
                     messages.success(self.request, _("The following groups are now displayed to this group: %(display)s")
                         % { 'display': valid_display_string })
@@ -367,13 +370,56 @@ class DeleteView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView)
 
 def SyncView(request, action=None):
     user = request.user
+    group_count = 0
+    member_count = 0
     if not user.is_superuser:
         raise Http404("The requested URL " + request.path + " was not found on this server.")
     elif action == "to":
-        return HttpResponse("Sync to XMPP initiated by " + user.username)
-        #return HttpResponseRedirect(reverse('admin:groups_group_changelist'))
+        for group in Group.objects.all():
+            xmpp_backend.srg_delete(groupname=group.name, domain='jabber.rwth-aachen.de')
+            group.save()
+            group_count += 1
+            for user in group.members.all():
+                membership.objects.get(user=user.id,group=group.id).save()
+                member_count += 1
+        messages.success(request, _("Sync from Django to XMPP completed! Exported %(group)s groups and %(member)s memberships to ejabberd.")
+            % { 'group': group_count, 'member': member_count })
+        return HttpResponseRedirect(reverse('admin:groups_group_changelist'))
     elif action == "from":
-        return HttpResponse("Sync from XMPP initiated by " + user.username)
-        #return HttpResponseRedirect(reverse('admin:groups_group_changelist'))
+        for group in xmpp_backend.srg_list(domain='jabber.rwth-aachen.de'):
+            group_info = xmpp_backend.srg_get_info(groupname=group, domain='jabber.rwth-aachen.de')
+            try:
+                group_object = Group.objects.get(name = group)
+                group_object.displayed_to = group_info[1]['value']
+                group_object.description = group_info[2]['value']
+                group_object.save_native()
+            except Group.DoesNotExist:
+                group_object = Group(
+                    name = group,
+                    displayed_to = group_info[1]['value'],
+                    description = group_info[2]['value'],
+                )
+                group_object.save_native()
+            group_count += 1
+            for user in group_object.members.all():
+                    membership.objects.filter(user=user.id,group=group_object.id).delete() 
+            try:
+                for user in xmpp_backend.srg_get_members(groupname=group, domain='jabber.rwth-aachen.de'):
+                    try:
+                        member_count += 1
+                        member_object = User.objects.get(username=user)
+                        if membership.objects.filter(user=member_object.id,group=group_object.id).count() == 0:
+                            new_membership = membership(
+                                group = group_object,
+                                user = member_object,
+                            )
+                            new_membership.save_native()
+                    except User.DoesNotExist:
+                        pass
+            except BackendError:
+                messages.error(request, _("There was a BackendError when trying to get members of group '%(group)s' !") % { 'group': group })
+        messages.success(request, _("Sync from XMPP to Django completed! Imported %(group)s groups and %(member)s memberships from ejabberd.")
+            % { 'group': group_count, 'member': member_count })
+        return HttpResponseRedirect(reverse('admin:groups_group_changelist'))
     else:
         raise Http404("The requested URL " + request.path + " was not found on this server.")
