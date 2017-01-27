@@ -115,8 +115,6 @@ class GroupAuthMixin():
 
     def authorized_to_leave(self):
         user = self.request.user
-        if user.is_superuser:
-            return True
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
         if group in user.member.all():
             return True
@@ -202,7 +200,7 @@ class LeaveView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
         user = self.request.user
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
         if group in user.member.all():
-            membership.objects.filter(user=user.id,group=group.id).delete()
+            membership.objects.get(user=user.id,group=group.id).delete()
             messages.success(self.request, _("You have left the group '%(group)s'.") % { 'group': group.name })
         else:
             messages.error(self.request, _("You are not a member of this group so you cannot leave it!"))
@@ -412,7 +410,7 @@ def SyncView(request, action=None):
                 group_object.save_native()
             group_count += 1
             for user in group_object.members.all():
-                    membership.objects.filter(user=user.id,group=group_object.id).delete() 
+                membership.objects.get(user=user.id,group=group_object.id).delete_native()
             try:
                 for user in xmpp_backend.srg_get_members(groupname=group, domain='jabber.rwth-aachen.de'):
                     try:

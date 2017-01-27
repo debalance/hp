@@ -50,7 +50,7 @@ class GroupAdmin(admin.ModelAdmin):
             group.description = group_info['description']
             group.save_native()
             for user in group.members.all():
-                    membership.objects.filter(user=user.id,group=group.id).delete()
+                    membership.objects.get(user=user.id,group=group.id).delete_native()
             for user in xmpp_backend.srg_get_members(groupname=group.name, domain='jabber.rwth-aachen.de'):
                 try:
                     member = User.objects.get(username=user)
