@@ -17,6 +17,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_noop
 from django.views.generic import DetailView
 from django.views.generic import FormView
 from django.views.generic.base import TemplateView
@@ -26,6 +27,7 @@ from django.views.generic.edit import FormMixin
 from django.views.generic.edit import UpdateView
 
 from account.models import User
+from account.models import UserLogEntry
 from account.models import Confirmation
 from account.views import UserObjectMixin
 from core.views import StaticContextMixin
@@ -39,7 +41,6 @@ from .models import Group
 from .models import membership
 from .models import ownership
 
-#TODO: add user activity logs
 
 #
 # context menu
@@ -176,6 +177,8 @@ class CreateGroupView(LoginRequiredMixin, GroupPageMixin, FormView):
             user = self.request.user,
         )
         new_membership.save()
+        self.request.user.log(ugettext_noop('Created group %(groupname)s.'), self.request.META['REMOTE_ADDR'],
+                                groupname=form.cleaned_data.get('group_name'))
         return HttpResponseRedirect(new_group.get_absolute_url())
 
 
@@ -202,6 +205,7 @@ class LeaveView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
         if group in user.member.all():
             membership.objects.get(user=user.id,group=group.id).delete()
             messages.success(self.request, _("You have left the group '%(group)s'.") % { 'group': group.name })
+            user.log(ugettext_noop('Left group %(groupname)s.'), request.META['REMOTE_ADDR'], groupname=group.name)
         else:
             messages.error(self.request, _("You are not a member of this group so you cannot leave it!"))
         return HttpResponseRedirect(reverse('groups:membership'))
@@ -249,11 +253,15 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
             owner_object = User.objects.get(username = self.request.POST["delete_owner"])
             ownership.objects.get(user=owner_object.id,group=group.id).delete()
             messages.success(self.request, _("Removed %(user)s as owner of this group.") % { 'user': owner_object.username })
+            user.log(ugettext_noop('Removed owner %(ownername)s from group %(groupname)s.'), self.request.META['REMOTE_ADDR'],
+                        ownername=re.split('@', owner_object.username)[0], groupname=group.name)
 
         elif 'delete_member' in self.request.POST:
             member_object = User.objects.get(username = self.request.POST["delete_member"])
             membership.objects.get(user=member_object.id,group=group.id).delete()
             messages.success(self.request, _("Removed %(user)s as member of this group.") % { 'user': member_object.username })
+            user.log(ugettext_noop('Removed member %(membername)s from group %(groupname)s.'), self.request.META['REMOTE_ADDR'],
+                        membername=re.split('@', member_object.username)[0], groupname=group.name)
 
         elif 'add_member' in self.request.POST:
             member_string = form.cleaned_data.get('member_name')
@@ -281,6 +289,8 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                 if len(member_string) > 0:
                     messages.success(self.request, _("The following members have been added to the group: %(member)s")
                         % { 'member': member_string })
+                    user.log(ugettext_noop('Added members to group %(groupname)s: %(member)s.'), self.request.META['REMOTE_ADDR'],
+                                groupname=group.name, member=member_string)
                 already_member_string = ", ".join(already_member_list)
                 if len(already_member_string) > 0:
                     messages.info(self.request, _("The following users have already been members of the group: %(member)s")
@@ -312,6 +322,8 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                 if len(owner_string) > 0:
                     messages.success(self.request, _("The following owners have been added to the group: %(owner)s")
                         % { 'owner': owner_string })
+                    user.log(ugettext_noop('Added owners to group %(groupname)s: %(owner)s.'), self.request.META['REMOTE_ADDR'],
+                                groupname=group.name, owner=owner_string)
                 already_owner_string = ", ".join(already_owner_list)
                 if len(already_owner_string) > 0:
                     messages.info(self.request, _("The following users have already been owners of the group: %(owner)s")
@@ -340,6 +352,8 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                     group.save()
                     messages.success(self.request, _("The following groups are now displayed to this group: %(display)s")
                         % { 'display': valid_display_string })
+                    user.log(ugettext_noop('Changed displayed_groups for %(groupname)s to: %(disp)s.'),
+                                self.request.META['REMOTE_ADDR'], groupname=group.name, disp=valid_display_string)
                 invalid_display_string = ", ".join(invalid_display_list)
                 if len(invalid_display_string) > 0:
                     messages.error(self.request, _("The following groups do not exist or do not belong to you: %(display)s")
@@ -349,9 +363,13 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
             group.description = form.cleaned_data.get('group_description')
             group.save()
             messages.success(self.request, _("The group description has been updated!") % { 'group': group.name })
+            user.log(ugettext_noop('Updated description for group %(groupname)s.'), self.request.META['REMOTE_ADDR'],
+                        groupname=group.name)
 
         else:
             messages.error(self.request, _("Invalid POST action submitted!"))
+            user.log(ugettext_noop('Attempted illegal POST action: %(postaction)s.'), self.request.META['REMOTE_ADDR'],
+                        postaction=self.request.POST)
 
         return HttpResponseRedirect(reverse('groups:edit', args=(group.id,)))
 
@@ -367,6 +385,7 @@ class DeleteView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView)
             groupname = group.name
             group.delete()
             messages.success(self.request, _("The group '%(group)s' has been deleted.") % { 'group': groupname })
+            user.log(ugettext_noop('Deleted group %(groupname)s.'), request.META['REMOTE_ADDR'], groupname=group.name)
         else:
             messages.error(self.request, _("You are not an owner of this group so you cannot delete it!"))
         return HttpResponseRedirect(reverse('groups:ownership'))
