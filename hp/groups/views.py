@@ -190,7 +190,7 @@ class GroupView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, DetailView):
 
     def display_list(self):
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
-        dlist = re.split("\n", group.displayed_to)
+        dlist = re.split("\\\\n", group.displayed_to)
         return dlist
 
 
@@ -227,7 +227,7 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
 
     def display_list(self):
         group = get_object_or_404(Group, pk=self.kwargs['pk'])
-        dlist = re.split("\n", group.displayed_to)
+        dlist = re.split("\\\\n", group.displayed_to)
         return dlist
 
     def post(self, request, *args, **kwargs):
@@ -338,7 +338,7 @@ class EditView(LoginRequiredMixin, GroupPageMixin, GroupAuthMixin, FormMixin, De
                             invalid_display_list.append(display)
                 valid_display_string = ", ".join(valid_display_list)
                 if len(valid_display_string) > 0:
-                    group.displayed_to = "\n".join(valid_display_list)
+                    group.displayed_to = "\\n".join(valid_display_list)
                     group.save()
                     messages.success(self.request, _("The following groups are now displayed to this group: %(display)s")
                         % { 'display': valid_display_string })
@@ -396,14 +396,18 @@ def SyncView(request, action=None):
             group_info = xmpp_backend.srg_get_info(groupname=group, domain='jabber.rwth-aachen.de')
             try:
                 group_object = Group.objects.get(name = group)
-                group_object.displayed_to = group_info[1]['value']
-                group_object.description = group_info[2]['value']
+                #group_object.displayed_to = group_info[1]['value']
+                #group_object.description = group_info[2]['value']
+                group_object.displayed_to = group_info['displayed_groups']
+                group_object.description = group_info['description']
                 group_object.save_native()
             except Group.DoesNotExist:
                 group_object = Group(
                     name = group,
-                    displayed_to = group_info[1]['value'],
-                    description = group_info[2]['value'],
+                    #displayed_to = group_info[1]['value'],
+                    #description = group_info[2]['value'],
+                    displayed_to = group_info['displayed_groups'],
+                    description = group_info['description'],
                 )
                 group_object.save_native()
             group_count += 1

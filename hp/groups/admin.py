@@ -19,8 +19,8 @@ class GroupAdminForm(forms.ModelForm):
         model = Group
         fields = '__all__'
         widgets = {
-            'displayed_to': forms.Textarea,
-            'description': forms.Textarea,
+            'description': forms.Textarea(attrs={'rows':6, 'cols':98}),
+            'displayed_to': forms.TextInput(attrs={'size':'100'}),
         }
 
 class GroupAdmin(admin.ModelAdmin):
@@ -44,8 +44,10 @@ class GroupAdmin(admin.ModelAdmin):
     def sync_from_XMPP(modeladmin, request, queryset):
         for group in queryset:
             group_info = xmpp_backend.srg_get_info(groupname=group.name, domain='jabber.rwth-aachen.de')
-            group.displayed_to = group_info[1]['value']
-            group.description = group_info[2]['value']
+            #group.displayed_to = group_info[1]['value']
+            #group.description = group_info[2]['value']
+            group.displayed_to = group_info['displayed_groups']
+            group.description = group_info['description']
             group.save_native()
             for user in group.members.all():
                     membership.objects.filter(user=user.id,group=group.id).delete()
