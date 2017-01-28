@@ -1,2 +1,0 @@
-d /run/hp 0755 hp hp -
-d /var/log/hp 0755 hp hp -
