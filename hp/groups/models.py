@@ -103,4 +103,3 @@ class membership(models.Model):
 
     def delete_native(self, *args, **kwargs):
         super(membership, self).delete(*args, **kwargs)
-

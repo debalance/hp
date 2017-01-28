@@ -5,7 +5,6 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from account.models import User
-from xmpp_backends.base import BackendError
 from xmpp_backends.django import xmpp_backend
 
 from .models import Group

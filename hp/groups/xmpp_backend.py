@@ -26,13 +26,18 @@ class EjabberdRestBackendRWTH(EjabberdRestBackend):
         try:
             result = {}
             response = self.post('srg_get_info', group=groupname, host=domain)
-            # result = response.json()
+            #result = response.json()
             # result is a JSON dict (emtpy dict if group is non-existent)
-            
+            #return result
+            #
             # Because of a bug in the REST API we cannot use response.json()
-            # workaround: call "ejabberdctl" instead!
+            # see https://github.com/processone/ejabberd/issues/1500
+            #
+            # workaround: call "ejabberdctl" instead! (works only on localhost)
+            #
             # Put the following in your sudoers:
             #  django ALL=(ALL) NOPASSWD: /usr/sbin/ejabberdctl srg_get_info *
+            #
             command = 'sudo ejabberdctl srg_get_info "' + groupname + '" ' + domain
             response = subprocess.getoutput(command)
             for line in response.split("\n"):

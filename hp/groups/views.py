@@ -6,13 +6,9 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth import login
-from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
-from django.core.urlresolvers import reverse_lazy
 from django.http import Http404
-from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -22,9 +18,7 @@ from django.views.generic import DetailView
 from django.views.generic import FormView
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.edit import CreateView
 from django.views.generic.edit import FormMixin
-from django.views.generic.edit import UpdateView
 
 from account.models import User
 from account.models import UserLogEntry
@@ -433,8 +427,8 @@ def SyncView(request, action=None):
             try:
                 for user in xmpp_backend.srg_get_members(groupname=group, domain='jabber.rwth-aachen.de'):
                     try:
-                        member_count += 1
                         member_object = User.objects.get(username=user)
+                        member_count += 1
                         if membership.objects.filter(user=member_object.id,group=group_object.id).count() == 0:
                             new_membership = membership(
                                 group = group_object,
