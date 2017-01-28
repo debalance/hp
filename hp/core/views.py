@@ -36,6 +36,7 @@ from ua_parser import user_agent_parser
 from bootstrap.templatetags.bootstrap import glyph
 from core.utils import canonical_link
 
+from .constants import ACTIVITY_CONTACT
 from .forms import AnonymousContactForm
 from .forms import ContactForm
 from .forms import SelectOSForm
@@ -131,38 +132,85 @@ class StaticContextMixin(object):
         return context
 
 
-class BlacklistMixin(object):
-    blacklist_template = 'core/blacklist.html'
+class AntiSpamMixin(object):
+    blacklist_template = 'core/antispam/blacklist.html'
+    dnsbl_template = 'core/antispam/dnsbl.html'
+    rate_template = 'core/antispam/rate.html'
+    rate_activity = None
+
+    def get_rate_cache_key(self, request):
+        return 'rate_%s_%s' % (self.rate_activity, request.META['REMOTE_ADDR'])
+
+    def check_rate(self, request, rate_addr):
+        """Check if the given IP is currently ratelimited for this view.
+
+        Returns
+        -------
+
+        bool
+            Returns ``False`` if the IP is currently ratelimited for this activity, ``True``
+            otherwise.
+        """
+
+        if self.rate_activity is None:
+            return True
+        if rate_addr in _RATELIMIT_WHITELIST or settings.DEBUG is True:
+            return True
+
+        cache_key = self.get_rate_cache_key(request)
+        now = timezone.now()
+        timestamps = cache.get(cache_key) or []
+        config = _RATELIMIT_CONFIG.get(self.rate_activity, {})
+
+        for delta, ratelimit in config:
+            offset = now - delta
+            if len([t for t in timestamps if t >= offset]) > ratelimit:
+                return False
+        return True
+
+    def ratelimit(self, request):
+        if settings.DEBUG is True:
+            rate_addr = request.GET.get('ratelimit', request.META['REMOTE_ADDR'])
+        else:
+            rate_addr = request.META['REMOTE_ADDR']
+
+        if rate_addr in _RATELIMIT_WHITELIST or self.rate_activity is None:
+            return
+
+        cache_key = self.get_rate_cache_key(request)
+        timestamps = cache.get(cache_key) or []
+        timestamps.append(timezone.now())
+        cache.set(cache_key, timestamps, timeout=86400)
 
     def dispatch(self, request, *args, **kwargs):
-        if settings.DEBUG is True and request.GET.get('blacklist'):
-            addr = request.GET['blacklist']
+        if settings.DEBUG is True:
+            bl_addr = request.GET.get('blacklist', request.META['REMOTE_ADDR'])
+            dnsbl_addr = request.GET.get('dnsbl', request.META['REMOTE_ADDR'])
+            rate_addr = request.GET.get('ratelimit', request.META['REMOTE_ADDR'])
         else:
-            addr = request.META['REMOTE_ADDR']
+            bl_addr = dnsbl_addr = rate_addr = request.META['REMOTE_ADDR']
 
-        addr = ipaddress.ip_address(addr)
+        # Check static blacklist (settings.SPAM_BLACKLIST)
+        bl_addr = ipaddress.ip_address(bl_addr)
         for network in _BLACKLIST:
-            if addr in network:
+            if bl_addr in network:
+                log.info('%s: IP is in settings.BLACKLIST.', bl_addr)
                 return TemplateResponse(request, self.blacklist_template, {})
 
-        return super(BlacklistMixin, self).dispatch(request, *args, **kwargs)
+        # Check ratelimits
+        if self.check_rate(request, rate_addr) is False:
+            log.info('%s: IP is ratelimited.', rate_addr)
+            return TemplateResponse(request, self.rate_template, {})
 
-
-class DnsBlMixin(object):
-    dnsbl_template = 'core/dnsbl.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        if settings.DEBUG is True and request.GET.get('dnsbl'):
-            addr = request.GET['dnsbl']
-        else:
-            addr = request.META['REMOTE_ADDR']
-
-        blocks = check_dnsbl(addr)
+        # Check DNS Blacklists
+        blocks = check_dnsbl(dnsbl_addr)
         if blocks:
+            log.info('%s: IP is on at least one DNSBL.', dnsbl_addr)
             return TemplateResponse(request, self.dnsbl_template, {
                 'blocks': blocks,
             })
-        return super(DnsBlMixin, self).dispatch(request, *args, **kwargs)
+
+        return super(AntiSpamMixin, self).dispatch(request, *args, **kwargs)
 
 
 class AnonymousRequiredMixin(object):
@@ -178,43 +226,6 @@ class AnonymousRequiredMixin(object):
         if request.user.is_authenticated():
             return HttpResponseRedirect(self.redirect_url)
         return super(AnonymousRequiredMixin, self).dispatch(request, *args, **kwargs)
-
-
-class RateLimitMixin(object):
-    rate_activity = None
-    rate_template = 'core/rate.html'
-
-    def get_rate_cache_key(self, request):
-        return 'rate_%s_%s' % (self.rate_activity, request.META['REMOTE_ADDR'])
-
-    def check_rate(self, request):
-        if request.META['REMOTE_ADDR'] in _RATELIMIT_WHITELIST or settings.DEBUG is True:
-            return True
-
-        cache_key = self.get_rate_cache_key(request)
-        now = timezone.now()
-        timestamps = cache.get(cache_key) or []
-        config = _RATELIMIT_CONFIG.get(self.rate_activity)
-
-        for delta, ratelimit in config:
-            offset = now - delta
-            if len([t for t in timestamps if t >= offset]) > ratelimit:
-                return False
-        return True
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.check_rate(request) is False:
-            return TemplateResponse(request, self.rate_template, {})
-        return super(RateLimitMixin, self).dispatch(request, *args, **kwargs)
-
-    def ratelimit(self, request):
-        if request.META['REMOTE_ADDR'] in _RATELIMIT_WHITELIST:
-            return
-
-        cache_key = self.get_rate_cache_key(request)
-        timestamps = cache.get(cache_key) or []
-        timestamps.append(timezone.now())
-        cache.set(cache_key, timestamps, timeout=86400)
 
 
 class ClientsView(StaticContextMixin, TemplateView):
@@ -256,9 +267,9 @@ class ClientsView(StaticContextMixin, TemplateView):
         return context
 
 
-class ContactView(BlacklistMixin, DnsBlMixin, StaticContextMixin, FormView):
-    # TODO: Use ratelimit mixin as well
+class ContactView(AntiSpamMixin, StaticContextMixin, FormView):
     template_name = 'core/contact.html'
+    rate_activity = ACTIVITY_CONTACT
     success_url = reverse_lazy('core:contact')
 
     def get_context_data(self, *args, **kwargs):

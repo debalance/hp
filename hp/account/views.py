@@ -55,9 +55,7 @@ from core.constants import ACTIVITY_SET_PASSWORD
 from core.constants import ACTIVITY_FAILED_LOGIN
 from core.models import AddressActivity
 from core.views import AnonymousRequiredMixin
-from core.views import BlacklistMixin
-from core.views import DnsBlMixin
-from core.views import RateLimitMixin
+from core.views import AntiSpamMixin
 from core.views import StaticContextMixin
 
 from .constants import PURPOSE_DELETE
@@ -146,8 +144,7 @@ class UserObjectMixin(object):
         return self.request.user
 
 
-class RegistrationView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequiredMixin,
-                       StaticContextMixin, CreateView):
+class RegistrationView(AntiSpamMixin, AnonymousRequiredMixin, StaticContextMixin, CreateView):
     form_class = CreateUserForm
     model = User
     rate_activity = ACTIVITY_REGISTER
@@ -267,7 +264,7 @@ class ConfirmRegistrationView(ConfirmationMixin, FormView):
         return super(ConfirmRegistrationView, self).form_valid(form)
 
 
-class LoginView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequiredMixin, FormView):
+class LoginView(AntiSpamMixin, AnonymousRequiredMixin, FormView):
     """Class-based adaption of django.contrib.auth.views.login.
 
     We duplicate the functionality here because we want to redirect the user to the account
@@ -315,8 +312,7 @@ class UserView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView
     requires_confirmation = False
 
 
-class ResetPasswordView(BlacklistMixin, DnsBlMixin, RateLimitMixin, AnonymousRequiredMixin,
-                        FormView):
+class ResetPasswordView(AntiSpamMixin, AnonymousRequiredMixin, FormView):
     form_class = ResetPasswordForm
     rate_activity = ACTIVITY_RESET_PASSWORD
     template_name = 'account/user_password_reset.html'
