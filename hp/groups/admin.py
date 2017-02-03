@@ -24,8 +24,9 @@ class GroupAdminForm(forms.ModelForm):
 
 class GroupAdmin(admin.ModelAdmin):
     form = GroupAdminForm
-    list_display = ('name', 'description', 'id')
+    list_display = ('name', 'description', 'displayed_to', 'id')
     fields = ('name', 'description', 'displayed_to')
+    search_fields = ['name', 'description', 'displayed_to', ]
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
