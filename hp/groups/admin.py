@@ -79,7 +79,6 @@ admin.site.register(Group, GroupAdmin)
 
 class ShipAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'groupname', 'username')
-    search_fields = ['groupname', 'username', ]
     
     def get_readonly_fields(self, request, obj=None):
         if obj:
