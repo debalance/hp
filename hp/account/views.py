@@ -28,6 +28,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.db import transaction
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
@@ -70,6 +71,7 @@ from .forms import NotificationsForm
 from .forms import SetEmailForm
 from .forms import SetPasswordForm
 from .forms import ResetPasswordForm
+from .forms import AddGpgForm
 from .models import Confirmation
 from .tasks import add_gpg_key_task
 from .tasks import send_confirmation_task
@@ -507,6 +509,25 @@ class GpgView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView)
     template_name = 'account/user_gpg.html'
 
 
+class AddGpgView(LoginRequiredMixin, AccountPageMixin, FormView):
+    form_class = AddGpgForm
+    success_url = reverse_lazy('account:gpg')
+    template_name = 'account/add_gpg.html'
+    usermenu_item = 'account:gpg'
+
+    def form_valid(self, form):
+        request = self.request
+        user = request.user
+        address = request.META['REMOTE_ADDR']
+
+        fp, key = form.get_gpg_data()
+        add_gpg_key_task.delay(user_pk=user.pk, address=address, fingerprint=fp, key=key)
+
+        messages.success(request, _('Processing new GPG key, it will be added in a moment.'))
+
+        return super(AddGpgView, self).form_valid(form)
+
+
 class RecentActivityView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView):
     """Main user settings view (/account)."""
 
@@ -624,6 +645,28 @@ class DeleteHttpUploadView(LoginRequiredMixin, SingleObjectMixin, View):
         queryset = queryset.filter(jid=self.request.user.get_username())
 
         return super(DeleteHttpUploadView, self).get_object(queryset=queryset)
+
+    def delete(self, request, pk):
+        self.get_object().delete()
+        return HttpResponse('ok')
+
+
+class ManageGpgView(LoginRequiredMixin, SingleObjectMixin, View):
+    queryset = Upload.objects.all()
+
+    def get_object(self, queryset=None):
+        queryset = self.request.user.gpg_keys.all()
+        return super(ManageGpgView, self).get_object(queryset=queryset)
+
+    def get(self, request, pk):
+        key = self.get_object()
+        address = request.META['REMOTE_ADDR']
+        add_gpg_key_task.delay(user_pk=self.request.user.pk, address=address,
+                               fingerprint=key.fingerprint)
+        return JsonResponse({
+            'status': 'success',
+            'message': _('Refreshing GPG key...'),
+        })
 
     def delete(self, request, pk):
         self.get_object().delete()
