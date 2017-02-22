@@ -28,6 +28,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.db import transaction
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
@@ -57,6 +58,7 @@ from core.models import AddressActivity
 from core.views import AnonymousRequiredMixin
 from core.views import AntiSpamMixin
 from core.views import StaticContextMixin
+from stats.models import stat
 
 from .constants import PURPOSE_DELETE
 from .constants import PURPOSE_REGISTER
@@ -70,6 +72,7 @@ from .forms import NotificationsForm
 from .forms import SetEmailForm
 from .forms import SetPasswordForm
 from .forms import ResetPasswordForm
+from .forms import AddGpgForm
 from .models import Confirmation
 from .tasks import add_gpg_key_task
 from .tasks import send_confirmation_task
@@ -169,6 +172,7 @@ class RegistrationView(AntiSpamMixin, AnonymousRequiredMixin, StaticContextMixin
             # log user creation, display help message.
             user.log(ugettext_noop('Account created.'), address=address)
             AddressActivity.objects.log(request, ACTIVITY_REGISTER, user=user, note=user.email)
+            stat('register', 1)
 
             messages.success(request, _(
                 """Successfully created the account %(username)s. A confirmation email was
@@ -257,6 +261,7 @@ class ConfirmRegistrationView(ConfirmationMixin, FormView):
             # TODO: More meaningful help message on a webchat, usable clients, follow updates, ...
             messages.success(request, _(
                 "Successfully confirmed your email address. You can now use your account."))
+            stat('register_confirmed', 1)
 
             # Delete the registration key
             key.delete()
@@ -334,6 +339,7 @@ class ResetPasswordView(AntiSpamMixin, AnonymousRequiredMixin, FormView):
 
         user.log(ugettext_noop('Requested password reset.'), address)
         AddressActivity.objects.log(request, ACTIVITY_RESET_PASSWORD, user=user)
+        stat('password_reset', 1)
 
         send_confirmation_task.delay(
             user_pk=user.pk, purpose=PURPOSE_RESET_PASSWORD, language=lang, address=address,
@@ -451,6 +457,7 @@ class SetEmailView(LoginRequiredMixin, AccountPageMixin, FormView):
             'to confirm it.') % {'email': to})
         user.log(ugettext_noop('Requested change of email address to %(email)s.'), address,
                  email=to)
+        stat('set_email', 1)
         AddressActivity.objects.log(request, ACTIVITY_SET_EMAIL, note=to)
 
         return super(SetEmailView, self).form_valid(form)
@@ -507,6 +514,25 @@ class GpgView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView)
     template_name = 'account/user_gpg.html'
 
 
+class AddGpgView(LoginRequiredMixin, AccountPageMixin, FormView):
+    form_class = AddGpgForm
+    success_url = reverse_lazy('account:gpg')
+    template_name = 'account/add_gpg.html'
+    usermenu_item = 'account:gpg'
+
+    def form_valid(self, form):
+        request = self.request
+        user = request.user
+        address = request.META['REMOTE_ADDR']
+
+        fp, key = form.get_gpg_data()
+        add_gpg_key_task.delay(user_pk=user.pk, address=address, fingerprint=fp, key=key)
+
+        messages.success(request, _('Processing new GPG key, it will be added in a moment.'))
+
+        return super(AddGpgView, self).form_valid(form)
+
+
 class RecentActivityView(LoginRequiredMixin, AccountPageMixin, UserObjectMixin, DetailView):
     """Main user settings view (/account)."""
 
@@ -547,6 +573,7 @@ class DeleteAccountView(LoginRequiredMixin, AccountPageMixin, FormView):
             'We sent you an email to %(email)s to confirm your request.') %
             {'email': user.email, })
         user.log(ugettext_noop('Requested deletion of account.'), address)
+        stat('delete_account', 1)
         AddressActivity.objects.log(request, ACTIVITY_SET_EMAIL, note=user.email)
 
         return HttpResponseRedirect(reverse('account:detail'))
@@ -624,6 +651,28 @@ class DeleteHttpUploadView(LoginRequiredMixin, SingleObjectMixin, View):
         queryset = queryset.filter(jid=self.request.user.get_username())
 
         return super(DeleteHttpUploadView, self).get_object(queryset=queryset)
+
+    def delete(self, request, pk):
+        self.get_object().delete()
+        return HttpResponse('ok')
+
+
+class ManageGpgView(LoginRequiredMixin, SingleObjectMixin, View):
+    queryset = Upload.objects.all()
+
+    def get_object(self, queryset=None):
+        queryset = self.request.user.gpg_keys.all()
+        return super(ManageGpgView, self).get_object(queryset=queryset)
+
+    def get(self, request, pk):
+        key = self.get_object()
+        address = request.META['REMOTE_ADDR']
+        add_gpg_key_task.delay(user_pk=self.request.user.pk, address=address,
+                               fingerprint=key.fingerprint)
+        return JsonResponse({
+            'status': 'success',
+            'message': _('Refreshing GPG key...'),
+        })
 
     def delete(self, request, pk):
         self.get_object().delete()

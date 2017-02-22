@@ -51,6 +51,7 @@ _DEFAULT_INSTALLED_APPS = [
     'bootstrap',  # bootstrap enhancements
     'account',  # account management
     'feed',  # RSS/Atom feeds
+    'stats',  # Statistics gathering
     'conversejs',  # webchat
     'groups',  # shared roster group management
 
@@ -173,6 +174,119 @@ LOGIN_REDIRECT_URL = reverse_lazy('account:detail')
 AUTHENTICATION_BACKENDS = [
     'xmpp_backends.django.auth_backends.XmppBackendBackend',
 ]
+
+############
+# TinyMCE4 #
+############
+TINYMCE_JS_URL = 'lib/tinymce/js/tinymce/tinymce.min.js'
+TINYMCE_DEFAULT_CONFIG = {
+    'selector': 'textarea',
+    'theme': 'modern',
+    'setup': 'tinymce_setup',
+    'convert_urls': False,
+    'plugins': 'link image lists preview contextmenu table code codesample',
+    'toolbar1': 'styleselect | bold italic underline strikethrough '
+                '| bullist numlist | outdent indent | table | link image codesample '
+                '| preview code removeformat',
+    'toolbar2': 'labels glyphs',
+    'contextmenu': 'formats | link image',
+    'menubar': False,
+    'inline': False,
+    'extended_valid_elements': 'span[class|aria-hidden]',  # required for glpyhicons
+    'style_formats': [
+        {'title': 'Headers', 'items': [
+            # NOTE: <h1> is already the page title, so actual h-level is one level down from tite
+            {'title': 'Header 1', 'block': 'h2', },
+            {'title': 'Header 2', 'block': 'h3', },
+            {'title': 'Header 3', 'block': 'h4', },
+        ], },
+        {'title': 'Alerts', 'items': [
+            {'title': 'Success', 'block': 'div', 'classes': 'alert alert-success', },
+            {'title': 'Info', 'block': 'div', 'classes': 'alert alert-info', },
+            {'title': 'Warning', 'block': 'div', 'classes': 'alert alert-warning', },
+            {'title': 'Danger', 'block': 'div', 'classes': 'alert alert-danger', },
+        ], },
+        {'title': 'Context', 'items': [
+            {'title': 'textmuted', 'inline': 'span', 'classes': 'text-muted', },
+            {'title': 'textprimary', 'inline': 'span', 'classes': 'text-primary', },
+            {'title': 'textsuccess', 'inline': 'span', 'classes': 'text-success', },
+            {'title': 'textinfo', 'inline': 'span', 'classes': 'text-info', },
+            {'title': 'textwarning', 'inline': 'span', 'classes': 'text-warning', },
+            {'title': 'textdanger', 'inline': 'span', 'classes': 'text-danger', },
+        ], },
+    ],
+    'formats': {
+        'underline': {'inline': 'u', 'exact': True},
+        'strikethrough': {'inline': 's', 'exact': True},
+        #'inlinecode': {'inline': 'code', 'exact': True},
+
+
+        'label_default': {'inline': 'span', 'classes': 'label label-default', },
+        'label_primary': {'inline': 'span', 'classes': 'label label-primary', },
+        'label_success': {'inline': 'span', 'classes': 'label label-success', },
+        'label_info': {'inline': 'span', 'classes': 'label label-info', },
+        'label_warning': {'inline': 'span', 'classes': 'label label-warning', },
+        'label_danger': {'inline': 'span', 'classes': 'label label-danger', },
+
+        'tablestriped': {'selector': 'table', 'classes': 'table-striped'},
+        'tablebordered': {'selector': 'table', 'classes': 'table-bordered'},
+        'tablehover': {'selector': 'table', 'classes': 'table-hover'},
+        'tablecondensed': {'selector': 'table', 'classes': 'table-condensed'},
+    },
+    'content_css': [
+        '/static/lib/bootstrap/css/bootstrap.min.css',
+        '/static/lib/bootstrap/css/bootstrap-theme.min.css',
+        '/static/css/theme.css',
+        '/static/core/css/base.css',
+        '/static/core/css/tinymce-preview.css',
+    ],
+    # Do table styling with bootstrap classes
+    'table_toolbar': "tableprops tabledelete "
+                     "| tablestriped tablebordered tablehover tablecondensed "
+                     "| tableinsertrowbefore tableinsertrowafter tabledeleterow "
+                     "| tableinsertcolbefore tableinsertcolafter tabledeletecol",
+    'table_default_attributes': {
+        'class': 'table table-responsive',
+    },
+    'table_appearance_options': False,
+    'table_advtab': False,
+    'table_cell_advtab': False,
+    'table_row_advtab': False,
+    'table_row_class_list': [
+        {'title': 'None', 'value': ''},
+        {'title': 'Active', 'value': 'active'},
+        {'title': 'Success', 'value': 'success'},
+        {'title': 'Info', 'value': 'info'},
+        {'title': 'Warning', 'value': 'warning'},
+        {'title': 'Danger', 'value': 'danger'},
+    ],
+    'table_cell_class_list': [
+        {'title': 'None', 'value': ''},
+        {'title': 'Active', 'value': 'active'},
+        {'title': 'Success', 'value': 'success'},
+        {'title': 'Info', 'value': 'info'},
+        {'title': 'Warning', 'value': 'warning'},
+        {'title': 'Danger', 'value': 'danger'},
+    ],
+    # Displays the current HTML tree (e.g. "p > strong > ...") at the bottom
+    #'statusbar': False,
+    'height': 200,
+
+    # codesample
+    'codesample_languages': [
+        {'text': 'Apache', 'value': 'apacheconf', },
+        {'text': 'Bash', 'value': 'bash', },
+        {'text': 'C', 'value': 'c', },
+        {'text': 'CSS', 'value': 'css', },
+        {'text': 'Diff', 'value': 'diff', },
+        {'text': 'Django', 'value': 'django', },
+        {'text': 'HTML/XML', 'value': 'markup', },
+        {'text': 'JSON', 'value': 'json', },
+        {'text': 'JavaScript', 'value': 'javascript', },
+        {'text': 'PHP', 'value': 'php', },
+        {'text': 'Python', 'value': 'python', },
+    ],
+}
 
 ###################
 # CUSTOM SETTINGS #
@@ -319,6 +433,10 @@ CELERY_BEAT_SCHEDULE = {
     'account last activity': {
         'task': 'account.tasks.update_last_activity',
         'schedule': crontab(minute=12),
+    },
+    'download_xmpp_net_badges': {
+        'task': 'blog.download_xmpp_net_badges',
+        'schedule': crontab(hour=9, minute=33),
     },
 }
 CELERY_WORKER_LOG_FORMAT = None
