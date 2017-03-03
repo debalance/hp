@@ -1,16 +1,6 @@
 {% extends "account/base.html" %}
 {% load i18n core bootstrap staticfiles %}
 
-{% block extrajs %}
-{{ block.super }}
-<script src="{% static 'account/js/sessions.js' %}"></script>
-{% endblock extrajs %}
-
-{% block extracss %}
-{{ block.super }}
-<link href="{% static 'account/css/sessions.css' %}" rel="stylesheet">
-{% endblock extracss %}
-
 {% block title %}{% trans "Current sessions" %}{% endblock title %}
 
 {% block content %}
@@ -19,22 +9,30 @@ looks suspicious to you, you can stop the session from here with a click on
 the trash icon.{% endblocktrans %}
 
 {% if sessions %}
-<table class="table">
-    <tr>
-        <th>{% trans "IP" %}</th>
-        <th>{% trans "Resource" %}</th>
-        <th>{% trans "Started" %}</th>
-        <th></th>
-    </tr>
+<div class="table-responsive"><table class="table table-hover">
+    <thead>
+        <tr>
+            <th>{% trans "IP" %}</th>
+            <th>{% trans "Resource" %}</th>
+            <th>{% trans "Started" %}</th>
+            <th></th>
+        </tr>
+    </thead>
 {% for session in sessions %}
     <tr>
         <td>{{ session.ip }}</td>
         <td>{{ session.resource }}</td>
-        <td>{{ session.started|date:"SHORT_DATETIME_FORMAT" }}</td>
-        <td class="delete" data-delete-url="{% url "account:api-stop-user-session" resource=session.resource %}">{% glyph "trash" %}</td>
+        <td class="nowrap">{{ session.started|date:"SHORT_DATETIME_FORMAT" }}</td>
+        <td>
+            <span class="sr-only">{% trans "Stop connection" %}</span>
+            <span class="glyphicon glyphicon-trash glyph-button hover-danger" 
+                  data-url="{% url 'account:api-stop-user-session' resource=session.resource %}"
+                  data-action="remove-row" data-type="DELETE"
+                  title="{% trans 'Delete key' %}" aria-hidden="true"></span>
+        </td>
     </tr>
 {% endfor %}
-</table>
+    </table></div>
 {% else %}
 {% trans "You are currently not online with any client." %}
 {% endif %}

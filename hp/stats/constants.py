@@ -13,19 +13,13 @@
 # You should have received a copy of the GNU General Public License along with django-xmpp-account.
 # If not, see <http://www.gnu.org/licenses/>.
 
-
-from django.db import models
-
-
-def stat(metric, value=1):
-    """Just a shortcut."""
-    return Event.objects.create(metric=metric, value=value)
-
-
-class Event(models.Model):
-    stamp = models.DateTimeField(auto_now_add=True, db_index=True)
-    metric = models.SmallIntegerField(db_index=True)
-    value = models.IntegerField()
-
-    def __str__(self):
-        return '%s: %s' % (self.metric, self.value)
+STAT_REGISTER = 0
+STAT_REGISTER_CONFIRMED = 1
+STAT_RESET_PASSWORD = 2
+STAT_RESET_PASSWORD_CONFIRMED = 3
+STAT_SET_PASSWORD = 4
+STAT_SET_EMAIL = 5
+STAT_SET_EMAIL_CONFIRMED = 6
+STAT_DELETE_ACCOUNT = 7
+STAT_DELETE_ACCOUNT_CONFIRMED = 8
+STAT_FAILED_LOGIN = 9

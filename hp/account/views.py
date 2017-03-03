@@ -27,6 +27,7 @@ from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django.db import transaction
 from django.http import HttpResponse
+from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -59,6 +60,16 @@ from core.views import AnonymousRequiredMixin
 from core.views import AntiSpamMixin
 from core.views import StaticContextMixin
 from stats.models import stat
+from stats.constants import STAT_REGISTER
+from stats.constants import STAT_REGISTER_CONFIRMED
+from stats.constants import STAT_RESET_PASSWORD
+from stats.constants import STAT_RESET_PASSWORD_CONFIRMED
+from stats.constants import STAT_SET_PASSWORD
+from stats.constants import STAT_SET_EMAIL
+from stats.constants import STAT_SET_EMAIL_CONFIRMED
+from stats.constants import STAT_DELETE_ACCOUNT
+from stats.constants import STAT_DELETE_ACCOUNT_CONFIRMED
+from stats.constants import STAT_FAILED_LOGIN
 
 from .constants import PURPOSE_DELETE
 from .constants import PURPOSE_REGISTER
@@ -172,7 +183,7 @@ class RegistrationView(AntiSpamMixin, AnonymousRequiredMixin, StaticContextMixin
             # log user creation, display help message.
             user.log(ugettext_noop('Account created.'), address=address)
             AddressActivity.objects.log(request, ACTIVITY_REGISTER, user=user, note=user.email)
-            stat('register', 1)
+            stat(STAT_REGISTER)
 
             messages.success(request, _(
                 """Successfully created the account %(username)s. A confirmation email was
@@ -261,7 +272,7 @@ class ConfirmRegistrationView(ConfirmationMixin, FormView):
             # TODO: More meaningful help message on a webchat, usable clients, follow updates, ...
             messages.success(request, _(
                 "Successfully confirmed your email address. You can now use your account."))
-            stat('register_confirmed', 1)
+            stat(STAT_REGISTER_CONFIRMED)
 
             # Delete the registration key
             key.delete()
@@ -301,6 +312,7 @@ class LoginView(AntiSpamMixin, AnonymousRequiredMixin, FormView):
 
     def form_invalid(self, form):
         self.ratelimit(self.request)
+        stat(STAT_FAILED_LOGIN)
         return super(LoginView, self).form_invalid(form)
 
     def get_context_data(self, **kwargs):
@@ -339,7 +351,7 @@ class ResetPasswordView(AntiSpamMixin, AnonymousRequiredMixin, FormView):
 
         user.log(ugettext_noop('Requested password reset.'), address)
         AddressActivity.objects.log(request, ACTIVITY_RESET_PASSWORD, user=user)
-        stat('password_reset', 1)
+        stat(STAT_RESET_PASSWORD)
 
         send_confirmation_task.delay(
             user_pk=user.pk, purpose=PURPOSE_RESET_PASSWORD, language=lang, address=address,
@@ -368,6 +380,7 @@ class ConfirmResetPasswordView(ConfirmationMixin, FormView):
 
             key.user.log(ugettext_noop('Set new password.'), address)
             messages.success(request, _('Successfully changed your password.'))
+            stat(STAT_RESET_PASSWORD_CONFIRMED)
 
             key.user.backend = settings.AUTHENTICATION_BACKENDS[0]
             login(self.request, key.user)
@@ -421,6 +434,7 @@ class SetPasswordView(LoginRequiredMixin, AccountPageMixin, FormView):
         xmpp_backend.set_password(username=user.node, domain=user.domain, password=password)
         user.log(ugettext_noop('Set new password.'), address)
         AddressActivity.objects.log(request, ACTIVITY_SET_PASSWORD)
+        stat(STAT_SET_PASSWORD)
         messages.success(request, _('Successfully changed your password.'))
         return super(SetPasswordView, self).form_valid(form)
 
@@ -457,7 +471,7 @@ class SetEmailView(LoginRequiredMixin, AccountPageMixin, FormView):
             'to confirm it.') % {'email': to})
         user.log(ugettext_noop('Requested change of email address to %(email)s.'), address,
                  email=to)
-        stat('set_email', 1)
+        stat(STAT_SET_EMAIL)
         AddressActivity.objects.log(request, ACTIVITY_SET_EMAIL, note=to)
 
         return super(SetEmailView, self).form_valid(form)
@@ -493,6 +507,7 @@ class ConfirmSetEmailView(LoginRequiredMixin, RedirectView):
                              % {'email': user.email, })
             user.log(ugettext_noop('Confirmed email address change to %(email)s.'),
                      request.META['REMOTE_ADDR'], email=key.to)
+            stat(STAT_SET_EMAIL_CONFIRMED)
 
             return super(ConfirmSetEmailView, self).get_redirect_url()
 
@@ -573,7 +588,7 @@ class DeleteAccountView(LoginRequiredMixin, AccountPageMixin, FormView):
             'We sent you an email to %(email)s to confirm your request.') %
             {'email': user.email, })
         user.log(ugettext_noop('Requested deletion of account.'), address)
-        stat('delete_account', 1)
+        stat(STAT_DELETE_ACCOUNT)
         AddressActivity.objects.log(request, ACTIVITY_SET_EMAIL, note=user.email)
 
         return HttpResponseRedirect(reverse('account:detail'))
@@ -603,6 +618,7 @@ class ConfirmDeleteAccountView(LoginRequiredMixin, AccountPageMixin, FormView):
         xmpp_backend.remove_user(user.node, user.domain)
         key.delete()
         user.delete()
+        stat(STAT_DELETE_ACCOUNT_CONFIRMED)
 
         return HttpResponseRedirect(reverse('blog:home'))
 
@@ -630,6 +646,12 @@ class UserAvailableView(View):
         else:
             cache.set(cache_key, False, 30)
             return HttpResponse('')
+
+
+class ResendRegistrationConfirmation(LoginRequiredMixin, View):
+    def get(self, request):
+        if request.user.confirmed is not None:
+            return HttpResponseForbidden(_("Your email address is already confirmed."))
 
 
 class StopUserSessionView(LoginRequiredMixin, View):
