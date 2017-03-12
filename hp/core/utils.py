@@ -131,17 +131,20 @@ def check_dnsbl(ip):
     return blocks
 
 
-def canonical_link(path):
+def canonical_link(path, host=None):
     """Get the canonical link of a relative URL path.
 
     Uses the ``CANONICAL_BASE_URL`` setting in the default ``XMPP_HOST`` as base URL.
 
     Example::
 
-        >>> canonical_link('/foo/bar')
+        >>> canonical_link('/foo/bar', {'CANONICAL_BASE_URL': 'https://example.com'})
         'https://example.com/foo/bar'
     """
-    base_url = settings.XMPP_HOSTS[settings.DEFAULT_XMPP_HOST]['CANONICAL_BASE_URL']
+    if host is None:
+        host = settings.XMPP_HOSTS[settings.DEFAULT_XMPP_HOST]
+
+    base_url = host['CANONICAL_BASE_URL']
     return urljoin(base_url, path)
 
 
@@ -153,7 +156,9 @@ def absolutify_html(html, base_url):
     Examle::
 
         >>> absolutify_html('<a href="/foobar">test</a>', 'https://example.com')
-        '<a href="https://example.com/foobar">test</a>
+        '<a href="https://example.com/foobar">test</a>'
+        >>> absolutify_html('<a href="https://example.net/foobar">test</a>', 'https://example.com')
+        '<a href="https://example.net/foobar">test</a>'
     """
 
     attributes = [
@@ -182,7 +187,7 @@ def absolutify_html(html, base_url):
     # the <HEAD>: this breaks feed readers).
     body = dom.getElementsByTagName('body')[0]
     tree_walker = html5lib.treewalkers.getTreeWalker('dom')
-    html_serializer = html5lib.serializer.htmlserializer.HTMLSerializer()
+    html_serializer = html5lib.serializer.HTMLSerializer()
     return ''.join(html_serializer.serialize(tree_walker(body)))
 
 
