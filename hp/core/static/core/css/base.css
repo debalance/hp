@@ -17,6 +17,10 @@ body {
     padding: 1px 5px;  /* for mobile users */
 }
 
+table.text-center th {
+    text-align: center;
+}
+
 /**
  * Footer
  */
@@ -186,4 +190,26 @@ div.smfb-btn a .fb-label {
 /* hide metadata */
 div.metadata {
     display: none;
+}
+
+/**
+ * Footnotes
+ */
+body {
+    counter-reset: footnotecounter;
+}
+
+[data-toggle="tooltip"]:after {
+  counter-increment: footnotecounter;
+  content: counter(footnotecounter);
+  position: relative;
+  top: -0.4em;
+  font-size: smaller;
+}
+
+[data-toggle="tooltip"] + [data-toggle="tooltip"]:before {
+    content: ", ";
+    position: relative;
+    top: -0.4em;
+    font-size: smaller;
 }

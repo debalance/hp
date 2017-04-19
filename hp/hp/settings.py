@@ -66,6 +66,7 @@ _DEFAULT_INSTALLED_APPS = [
     'captcha',
     'django_object_actions',  # object actions
     'mptt',  # Tree structure for MenuItem
+    'reversion',  # object history for blogposts/pages
     'tinymce',  # Rich text editor
     'xmpp_http_upload',  # XEP-0363
 
@@ -188,13 +189,14 @@ TINYMCE_DEFAULT_CONFIG = {
     'convert_urls': False,
     'plugins': 'link image lists preview table code codesample',
     'toolbar1': 'styleselect | bold italic underline strikethrough '
-                '| bullist numlist | outdent indent | table | link image codesample '
-                '| preview code removeformat',
-    'toolbar2': 'labels glyphs',
+                '| alignleft aligncenter alignright alignjustify '
+                '| bullist numlist | outdent indent | link image ',
+    'toolbar2': 'labels tooltips glyphs | table codesample '
+                '| code removeformat',
     'contextmenu': 'formats | link image',
     'menubar': False,
     'inline': False,
-    'extended_valid_elements': 'span[class|aria-hidden]',  # required for glpyhicons
+    'extended_valid_elements': 'span[class|aria-hidden|data-toggle|title]',  # required for glpyhicons
     'style_formats': [
         {'title': 'Headers', 'items': [
             # NOTE: <h1> is already the page title, so actual h-level is one level down from tite
@@ -216,12 +218,36 @@ TINYMCE_DEFAULT_CONFIG = {
             {'title': 'textwarning', 'inline': 'span', 'classes': 'text-warning', },
             {'title': 'textdanger', 'inline': 'span', 'classes': 'text-danger', },
         ], },
+        {'title': 'OS-specific', 'items': [
+            {'title': 'Android', 'selector': 'p,h1,h2,h3,h4,h5,h6,tr,td,th,div,ul,ol,li,table,img',
+             'classes': 'os-android', },
+            {'title': 'Browser', 'selector': 'p,h1,h2,h3,h4,h5,h6,tr,td,th,div,ul,ol,li,table,img',
+             'classes': 'os-browser', },
+            {'title': 'iOS (iPhone/...)', 'selector': 'p,h1,h2,h3,h4,h5,h6,tr,td,th,div,ul,ol,li,table,img',
+             'classes': 'os-ios', },
+            {'title': 'Linux', 'selector': 'p,h1,h2,h3,h4,h5,h6,tr,td,th,div,ul,ol,li,table,img',
+             'classes': 'os-linux', },
+            {'title': 'Linux (console)', 'selector': 'p,h1,h2,h3,h4,h5,h6,tr,td,th,div,ul,ol,li,table,img',
+             'classes': 'os-console', },
+            {'title': 'MacOS X', 'selector': 'p,h1,h2,h3,h4,h5,h6,tr,td,th,div,ul,ol,li,table,img',
+             'classes': 'os-osx', },
+            {'title': 'Windows', 'selector': 'p,h1,h2,h3,h4,h5,h6,tr,td,th,div,ul,ol,li,table,img',
+             'classes': 'os-win', },
+        ], },
     ],
     'formats': {
         'underline': {'inline': 'u', 'exact': True},
         'strikethrough': {'inline': 's', 'exact': True},
         #'inlinecode': {'inline': 'code', 'exact': True},
 
+        'alignleft': {'selector': 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img',
+                      'classes': 'text-left', },
+        'aligncenter': {'selector': 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img',
+                        'classes': 'text-center', },
+        'alignright': {'selector': 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img',
+                       'classes': 'test-right', },
+        'alignjustify': {'selector': 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img',
+                         'classes': 'text-justify', },
 
         'label_default': {'inline': 'span', 'classes': 'label label-default', },
         'label_primary': {'inline': 'span', 'classes': 'label label-primary', },
@@ -234,21 +260,22 @@ TINYMCE_DEFAULT_CONFIG = {
         'tablebordered': {'selector': 'table', 'classes': 'table-bordered'},
         'tablehover': {'selector': 'table', 'classes': 'table-hover'},
         'tablecondensed': {'selector': 'table', 'classes': 'table-condensed'},
+        'tableresponsive': {'selector': 'table', 'wrapper': True, 'exact': True, 'remove': 'all',
+                            'block': 'div', 'classes': 'table-responsive-test'},
     },
     'content_css': [
         '/static/lib/bootstrap/css/bootstrap.min.css',
         '/static/lib/bootstrap/css/bootstrap-theme.min.css',
-        '/static/css/theme.css',
         '/static/core/css/base.css',
         '/static/core/css/tinymce-preview.css',
     ],
     # Do table styling with bootstrap classes
     'table_toolbar': "tableprops tabledelete "
-                     "| tablestriped tablebordered tablehover tablecondensed "
+                     "| tablestriped tablebordered tablehover tablecondensed tableresponsive "
                      "| tableinsertrowbefore tableinsertrowafter tabledeleterow "
                      "| tableinsertcolbefore tableinsertcolafter tabledeletecol",
     'table_default_attributes': {
-        'class': 'table table-responsive',
+        'class': 'table',
     },
     'table_appearance_options': False,
     'table_advtab': False,
@@ -343,13 +370,6 @@ _DEFAULT_SOCIAL_MEDIA_TEXTS = {
                        'Join the free and open Jabber instant messaging network today!'),
         'twitter_title': _('A free and secure Jabber/XMPP server'),
         'og_title': _('A free, secure, feature-rich Jabber/XMPP server'),
-    },
-    'core:clients': {
-        'title': _('Recommended Jabber/XMPP clients'),
-        'meta_desc': _('There are many different Jabber/XMPP clients to connect to %(BRAND)s, '
-                       'here are our favourites.'),
-        'og_desc': _('There are many different Jabber/XMPP clients to connect to %(BRAND)s. We '
-                     'have compiled a list of the best clients for your convenience.'),
     },
     'core:contact': {
         'meta_desc': _('Contact us here if you cannot connect or have issues with our service '

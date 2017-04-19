@@ -55,6 +55,7 @@ from core.constants import ACTIVITY_RESET_PASSWORD
 from core.constants import ACTIVITY_SET_EMAIL
 from core.constants import ACTIVITY_SET_PASSWORD
 from core.constants import ACTIVITY_FAILED_LOGIN
+from core.constants import ACTIVITY_RESEND_CONFIRMATION
 from core.models import AddressActivity
 from core.views import AnonymousRequiredMixin
 from core.views import AntiSpamMixin
@@ -70,6 +71,7 @@ from stats.constants import STAT_SET_EMAIL_CONFIRMED
 from stats.constants import STAT_DELETE_ACCOUNT
 from stats.constants import STAT_DELETE_ACCOUNT_CONFIRMED
 from stats.constants import STAT_FAILED_LOGIN
+from stats.constants import STAT_RESEND_CONFIRMATION
 
 from .constants import PURPOSE_DELETE
 from .constants import PURPOSE_REGISTER
@@ -439,15 +441,57 @@ class SetPasswordView(LoginRequiredMixin, AccountPageMixin, FormView):
         return super(SetPasswordView, self).form_valid(form)
 
 
-class SetEmailView(LoginRequiredMixin, AccountPageMixin, FormView):
+class SetEmailView(AntiSpamMixin, LoginRequiredMixin, AccountPageMixin, FormView):
     form_class = SetEmailForm
     success_url = reverse_lazy('account:detail')
     template_name = 'account/user_set_email.html'
     usermenu_item = 'account:set_email'
+    requires_confirmation = False
+    rate_activity = ACTIVITY_RESEND_CONFIRMATION
+
+    def handle_new_account(self, request, form):
+        self.ratelimit(request)
+        user = request.user
+
+        address = request.META['REMOTE_ADDR']
+        lang = request.LANGUAGE_CODE
+        base_url = '%s://%s' % (request.scheme, request.get_host())
+
+        with transaction.atomic():
+            request.user.email = form.cleaned_data['email']
+            request.user.save()
+
+            # Remove existing confirmation keys for different email addresses, otherwise the user might be
+            # able to get a confirmed address with the old key, but the new address is already set above
+            Confirmation.objects.filter(user=user, purpose=PURPOSE_REGISTER).exclude(to=user.email).delete()
+
+            # log user creation, display help message.
+            user.log(ugettext_noop('Resent confirmation.'), address=address)
+            AddressActivity.objects.log(request, ACTIVITY_RESEND_CONFIRMATION, user=user, note=user.email)
+            stat(STAT_RESEND_CONFIRMATION)
+            messages.success(request, _("Resent confirmation email to %(email)s.") % {'email': user.email})
+
+        task = send_confirmation_task.si(
+            user_pk=user.pk, purpose=PURPOSE_REGISTER, language=lang, address=address,
+            to=user.email, base_url=base_url, hostname=request.site['NAME'])
+
+        # Store GPG key if any
+        fp, key = form.get_gpg_data()
+        if fp or key:
+            gpg_task = add_gpg_key_task.si(
+                user_pk=user.pk, address=address, fingerprint=fp, key=key)
+            task = chain(gpg_task, task)
+        task.delay()
+
+        return HttpResponseRedirect(reverse('account:detail'))
 
     def form_valid(self, form):
         request = self.request
         user = request.user
+
+        if not user.created_in_backend:
+            return self.handle_new_account(request, form)
+
         address = request.META['REMOTE_ADDR']
         to = form.cleaned_data['email']
 

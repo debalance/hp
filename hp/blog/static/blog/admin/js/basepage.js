@@ -28,28 +28,38 @@ django.jQuery(document).ready(function() {
 var tinymce_setup = function(editor) {
     /** Buttons for the table menu */
     ['tablestriped', 'tablebordered', 'tablecondensed', 'tablehover'].forEach(function(cls) {
+        var stateSelector  = 'table.table.table-' + cls.substr(5);
         name = cls.substr(5);
         name = name.charAt(0).toUpperCase() + name.slice(1);
         editor.addButton(cls, {
             text: name,
+            stateSelector: stateSelector,
             onclick: function() {
                 editor.execCommand('mceToggleFormat', false, cls);
             },
-            onpostrender: function() {
-                /** 
-                 * Note: This is supposed to activate the button when the style is active (e.g.
-                 * like th bold button when you're in bold text), but it only works in the main
-                 * toolbar.
-                 */
-                
-                var btn = this;
-                editor.on('init', function() {
-                    editor.formatter.formatChanged(cls, function(state) {
-                        btn.active(state);
-                    });
-                });
-            }
         });
+    });
+
+    editor.addButton('tableresponsive', {
+        text: 'Responsive',
+        stateSelector: 'div.table-responsive',
+        onclick: function() {
+            selectedElm = editor.selection.getNode();
+            wrapperElm = editor.dom.getParent(selectedElm, 'div.table-responsive');
+
+            var table = editor.dom.getParent(selectedElm, 'table');
+            if (! table ) {
+                return;
+            }
+
+            if (wrapperElm) {
+                editor.dom.remove(wrapperElm, true);
+            } else {
+                var tableHtml = editor.dom.getOuterHTML(table);
+                var wrapper = editor.dom.create('div', {'class': 'table-responsive'}, tableHtml);
+                editor.dom.replace(wrapper, table);
+            }
+        }
     });
 
     var glyphs = [
@@ -62,6 +72,7 @@ var tinymce_setup = function(editor) {
         'ok',
         'pencil',
         'plus', 
+        'question-sign',
         'refresh',
         'remove',
         'repeat',
@@ -92,7 +103,6 @@ var tinymce_setup = function(editor) {
                     return e.startsWith('mce-menu-item-glyphicon-');
                 })[0];
                 glyph = glyph_cls.substr(24);
-                console.log(glyph_cls);
                 $('.' + glyph_cls + ' .mce-ico').replaceWith(
                     '<span class="glyphicon glyphicon-' + glyph + '"></span>');
             });
@@ -175,6 +185,100 @@ var tinymce_setup = function(editor) {
                     button.value('Labels');
                 } else {
                     button.value(matched[0]);
+                }
+            });
+        }
+    });
+
+    editor.addButton('tooltips', {
+        icon: 'superscript',
+        tooltip: "Insert/edit footnote",
+        stateSelector: '[data-toggle="tooltip"]',
+        onclick: function() {
+            var text_body;
+            var data = {};
+            var selection = editor.selection;
+
+            /**
+             * This is more or less copied from the TinyMCE source code:
+             * src/plugins/link/src/main/js/Plugin.js, where the link plugin is defined.
+             *
+             * Essentially we define a "data" object and populate it with tooltip and text from the
+             * current selection. The object is passed to editor.windowManager.open() to populate 
+             * the form fields defined in the "body" property.
+             */
+            selectedElm = selection.getNode();
+            anchorElm = editor.dom.getParent(selectedElm, '[data-toggle="tooltip"],span.glyphicon');
+            data.text = initialText = anchorElm ? (anchorElm.innerText || anchorElm.textContent) : selection.getContent({ format: 'text' });
+            data.tooltip = anchorElm ? editor.dom.getAttrib(anchorElm, 'title') : '';
+
+            /* Determine if this is a glyph. If yes, we don't display the text element! 
+             * NOTE: We use the ternary operator (instead of &&) because null && false == null.
+             * */
+            var is_glyph = anchorElm ? anchorElm.nodeName === 'SPAN' && editor.dom.hasClass(anchorElm, 'glyphicon') : false;
+
+            if (! is_glyph) {
+                text_body = {type: 'textbox', name: 'text', label: 'Text', 
+                             onchange: function() {  /* Update the data dict on any change */
+                                 data.text = this.value();
+                            }
+                };
+            }
+
+            editor.windowManager.open({
+                title: 'Tooltip',
+                body: [
+                  {type: 'textbox', name: 'tooltip', label: 'Tooltip',
+                   onchange: function() {  /* Update the data dict on any change */
+                       data.tooltip = this.value();
+                   }
+                  },
+                  text_body
+                ],
+                data: data,  /* Sets the initial values of the body elements */
+                onsubmit: function(e) {
+                    var createTooltip = function() {
+                        var attrs = {
+                            title: data.tooltip,
+                            "data-toggle": "tooltip"
+                        };
+
+                        /* if anchorElm is defined, we are already in a tooltip and need to update it */
+                        if (anchorElm) {
+                            editor.focus();
+
+                            if (data.text != initialText) {
+                                if ("innerText" in anchorElm) {
+                                    anchorElm.innerText = data.text;
+                                } else {
+                                    anchorElm.textContent = data.text;
+                                }
+                            }
+                            editor.dom.setAttribs(anchorElm, attrs);
+
+                            /* No idea what this does, but present in link plugin: */
+                            selection.select(anchorElm);
+                            editor.undoManager.add();
+                        } else {  /* new tooltip */
+                            editor.insertContent(editor.dom.createHTML(
+                                'span', attrs, editor.dom.encode(data.text)
+                            ));
+                        }
+                    }
+
+                    var insertTooltip = function() {
+                        editor.undoManager.transact(createTooltip);
+                    }
+
+                    data = tinyMCE.EditorManager.extend(data, e.data);
+
+                    var tooltip = data.tooltip;
+                    if (!tooltip) {
+                        editor.dom.remove(anchorElm, true);
+                        return;
+                    }
+
+                    insertTooltip();
                 }
             });
         }

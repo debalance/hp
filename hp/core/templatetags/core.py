@@ -20,6 +20,8 @@ from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 
+from ..forms import SelectOSForm
+from ..utils import format_link
 from ..utils import format_timedelta as _format_timedelta
 from ..utils import mailformat
 
@@ -63,10 +65,7 @@ def path(urlname, text='', title=None, anchor=None, **kwargs):
         if anchor is not None:
             path = '%s#%s' % (path, anchor)
 
-        title_attr = ''
-        if title:
-            title_attr = format_html(' title={}', title)
-        return format_html('<a href="{}"{}>{}</a>', path, title_attr, text)
+        return format_link(path, text, title=title)
     except Exception as e:
         log.exception(e)
         return ''
@@ -102,6 +101,13 @@ def format_filesize(size):
         return _('%.2f kilobyte') % (size / 1024)
     else:
         return _('%.2f megabyte') % (size / 1024 / 1024)
+
+
+@register.simple_tag(takes_context=True)
+def os_selector(context):
+    """Display a selector for OS-specific content."""
+    form = SelectOSForm()
+    return format_html('<form class="form-horizontal">{}</form>', form['os'].formgroup())
 
 
 @register.tag('mailformat')
